@@ -278,7 +278,11 @@ const getPastDateByYears = (years: number) => {
 };
 const formatDateForDisplay = (dateString: string | undefined) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString();
+    return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
 }
 
 // --- View Components ---
@@ -358,54 +362,88 @@ const StatisticsView = ({ apiKey }: { apiKey: string }) => {
 };
 
 const AccountView = ({ apiKey }: { apiKey: string }) => {
-  const { data, loading, error } = useApi('/account/load', apiKey);
+    const { data, loading, error } = useApi('/account/load', apiKey);
+    const [copyStatus, setCopyStatus] = useState('');
 
-  if (loading) return <CenteredMessage><Loader /></CenteredMessage>;
-  if (error) return <ErrorMessage error={error} />;
-  if (!data) return <CenteredMessage>No account data found.</CenteredMessage>;
+    const handleCopy = (textToCopy: string, message: string) => {
+        if (!textToCopy) return;
+        navigator.clipboard.writeText(textToCopy);
+        setCopyStatus(message);
+        setTimeout(() => setCopyStatus(''), 2000);
+    };
+
+    if (loading) return <CenteredMessage><Loader /></CenteredMessage>;
+    if (error) return <ErrorMessage error={error} />;
+    if (!data) return <CenteredMessage>No account data found.</CenteredMessage>;
+
+    const getStatusType = (status: string) => {
+        const cleanStatus = String(status || '').toLowerCase().replace(/\s/g, '');
+        if (cleanStatus.includes('active')) return 'success';
+        if (cleanStatus.includes('disabled') || cleanStatus.includes('abuse')) return 'danger';
+        if (cleanStatus.includes('review') || cleanStatus.includes('verification')) return 'warning';
+        return 'default';
+    }
+
+    const getReputationInfo = (reputation: number) => {
+        const score = Number(reputation || 0);
+        if (score >= 80) return { text: 'Excellent', className: 'good' };
+        if (score >= 60) return { text: 'Good', className: 'good' };
+        if (score >= 40) return { text: 'Average', className: 'medium' };
+        if (score >= 20) return { text: 'Poor', className: 'bad' };
+        return { text: 'Very Poor', className: 'bad' };
+    };
     
-  const getStatusType = (status: string) => {
-    const cleanStatus = String(status || '').toLowerCase().replace(/\s/g, '');
-    if (cleanStatus.includes('active')) return 'success';
-    if (cleanStatus.includes('disabled') || cleanStatus.includes('abuse')) return 'danger';
-    if (cleanStatus.includes('review') || cleanStatus.includes('verification')) return 'warning';
-    return 'default';
-  }
-  
-  const getReputationInfo = (reputation: number) => {
-      const score = Number(reputation || 0);
-      if (score >= 80) return { text: 'Excellent', className: 'good' };
-      if (score >= 60) return { text: 'Good', className: 'good' };
-      if (score >= 40) return { text: 'Average', className: 'medium' };
-      if (score >= 20) return { text: 'Poor', className: 'bad' };
-      return { text: 'Very Poor', className: 'bad' };
-  };
+    const status = data.status || 'Active';
+    const statusType = getStatusType(status);
+    const reputation = getReputationInfo(data.reputation);
+    const fullName = [data.firstname, data.lastname].filter(Boolean).join(' ');
 
-  const reputation = getReputationInfo(data.reputation);
+    return (
+        <div className="profile-view-container">
+            <div className="profile-hero">
+                <div className="profile-avatar">
+                    <Icon path={ICONS.ACCOUNT} />
+                </div>
+                <div className="profile-info">
+                    <h3>{fullName || 'User Profile'}</h3>
+                    <p className="profile-email">{data.email}</p>
+                    <div className="profile-meta">
+                        <div className="meta-item">
+                            <label>Public ID</label>
+                            <span>{data.publicaccountid || 'N/A'}</span>
+                        </div>
+                        <div className="meta-item">
+                            <label>Joined</label>
+                            <span>{formatDateForDisplay(data.datecreated)}</span>
+                        </div>
+                        <div className="meta-item">
+                            <label>Last Activity</label>
+                            <span>{formatDateForDisplay(data.lastactivity)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-  return (
-    <div className="card-grid account-grid">
-        <AccountDataCard title="Email" iconPath={ICONS.MAIL}>
-            {data.email}
-        </AccountDataCard>
-        <AccountDataCard title="Account Status" iconPath={ICONS.VERIFY}>
-            <Badge text={data.status} type={getStatusType(data.status)} />
-        </AccountDataCard>
-        <AccountDataCard title="Reputation" iconPath={ICONS.TRENDING_UP}>
-            <span className={`reputation-score ${reputation.className}`}>{data.reputation}%</span>
-            <span className="reputation-text">{reputation.text}</span>
-        </AccountDataCard>
-        <AccountDataCard title="Daily Send Limit" iconPath={ICONS.SEND_EMAIL}>
-            {(data.dailysendlimit ?? 0).toLocaleString()}
-        </AccountDataCard>
-        <AccountDataCard title="Subaccounts" iconPath={ICONS.CONTACTS}>
-            {data.subaccountcount?.toLocaleString() ?? '0'}
-        </AccountDataCard>
-        <AccountDataCard title="API Key" iconPath={ICONS.KEY}>
-            <span className="small-text">{apiKey}</span>
-        </AccountDataCard>
-    </div>
-  );
+            <div className="card-grid account-grid">
+                <AccountDataCard title="Account Status" iconPath={ICONS.VERIFY}>
+                    <Badge text={status} type={statusType} />
+                </AccountDataCard>
+                <AccountDataCard title="Reputation" iconPath={ICONS.TRENDING_UP}>
+                    <span className={`reputation-score ${reputation.className}`}>{data.reputation ?? 0}%</span>
+                    <span className="reputation-text">{reputation.text}</span>
+                </AccountDataCard>
+                <AccountDataCard title="Daily Send Limit" iconPath={ICONS.SEND_EMAIL}>
+                    {(data.dailysendlimit ?? 0).toLocaleString()}
+                </AccountDataCard>
+                 <AccountDataCard title="API Key" iconPath={ICONS.KEY}>
+                    <div className="copyable-field" onClick={() => handleCopy(apiKey, 'API Key Copied!')}>
+                        <span className="small-text">{apiKey}</span>
+                        {copyStatus === 'API Key Copied!' && <span className="copy-tooltip">Copied!</span>}
+                    </div>
+                </AccountDataCard>
+            </div>
+        </div>
+    );
 };
 
 const PURCHASE_WEBHOOK_URL = 'https://auto.zagrox.com/webhook-test/emailpack'; // As requested, URL is here for easy changes.
@@ -1057,8 +1095,8 @@ const CampaignCardSkeleton = () => (
 const CampaignsView = ({ apiKey }: { apiKey: string }) => {
     const { data: campaigns, loading, error } = useApiV4('/campaigns', apiKey);
     
-    const getBadgeTypeForStatus = (statusName: string) => {
-        const lowerStatus = statusName.toLowerCase();
+    const getBadgeTypeForStatus = (statusName: string | undefined) => {
+        const lowerStatus = (statusName || '').toLowerCase();
         if (lowerStatus === 'sent') return 'success';
         if (lowerStatus === 'draft') return 'default';
         if (lowerStatus === 'processing' || lowerStatus === 'sending') return 'info';
@@ -1086,7 +1124,7 @@ const CampaignsView = ({ apiKey }: { apiKey: string }) => {
                 <div key={campaign.Name} className="campaign-card">
                     <div className="campaign-card-header">
                         <h3>{campaign.Name}</h3>
-                        <Badge text={campaign.Status?.Name} type={getBadgeTypeForStatus(campaign.Status?.Name)} />
+                        <Badge text={campaign.Status?.Name ?? 'Unknown'} type={getBadgeTypeForStatus(campaign.Status?.Name)} />
                     </div>
                     <div className="campaign-card-body">
                         <p className="campaign-subject">
@@ -1227,13 +1265,14 @@ const DomainsView = ({ apiKey }: { apiKey: string }) => {
             
             {domainsList.length > 0 && <div className="card-grid domain-grid">
                 {domainsList.map((domain: any) => {
-                    const domainName = domain.Domain;
+                    const domainName = domain.Domain || domain.domain;
                     if (!domainName) return null;
                     
-                    const isSpfVerified = String(domain.Spf).toLowerCase() === 'true';
-                    const isDkimVerified = String(domain.Dkim).toLowerCase() === 'true';
-                    const isMxVerified = String(domain.MX).toLowerCase() === 'true';
-                    const isTrackingVerified = String(domain.TrackingStatus).toLowerCase() === 'validated';
+                    const isSpfVerified = String(domain.Spf || domain.spf).toLowerCase() === 'true';
+                    const isDkimVerified = String(domain.Dkim || domain.dkim).toLowerCase() === 'true';
+                    const isMxVerified = String(domain.MX || domain.mx).toLowerCase() === 'true';
+                    const trackingStatus = domain.TrackingStatus || domain.trackingstatus;
+                    const isTrackingVerified = String(trackingStatus).toLowerCase() === 'validated';
                     const isExpanded = expandedDomain === domainName;
 
                     return (

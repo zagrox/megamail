@@ -431,16 +431,18 @@ const BuyCreditsView = ({ apiKey, user }: { apiKey: string, user: any }) => {
 
         setIsSubmitting(pkg.credits);
 
+        const params = new URLSearchParams({
+            userapikey: apiKey,
+            useremail: user.email,
+            amount: pkg.credits.toString(),
+            totalprice: pkg.price.toString(),
+        });
+        
+        const requestUrl = `${PURCHASE_WEBHOOK_URL}?${params.toString()}`;
+
         try {
-            const response = await fetch(PURCHASE_WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userapikey: apiKey,
-                    useremail: user.email,
-                    amount: pkg.credits,
-                    totalprice: pkg.price,
-                }),
+            const response = await fetch(requestUrl, {
+                method: 'GET',
             });
 
             if (!response.ok) {
@@ -570,7 +572,7 @@ const DashboardView = ({ setView, apiKey, user }: { setView: (view: string) => v
             </div>
 
             <div className="dashboard-branding-footer">
-                <p>MegaMail by <strong>ZAGROX.com Development</strong> & <strong>Mailzila.com Email Provider</strong></p>
+                <p>MegaMail by <strong>ZAGROX</strong> & Powered by <strong>Mailzila.com</strong></p>
             </div>
         </div>
     );
@@ -1022,49 +1024,131 @@ const SendEmailView = ({ apiKey, user }: { apiKey: string, user: any }) => {
     );
 };
 
+const CampaignCardSkeleton = () => (
+    <div className="campaign-card">
+        <div className="campaign-card-header">
+            <div className="skeleton skeleton-title"></div>
+            <div className="skeleton skeleton-badge"></div>
+        </div>
+        <div className="campaign-card-body">
+            <div className="skeleton skeleton-text"></div>
+            <div className="skeleton skeleton-text"></div>
+        </div>
+        <div className="campaign-stats">
+            <div>
+                <span>Recipients</span>
+                <div className="skeleton skeleton-stat"></div>
+            </div>
+            <div>
+                <span>Opened</span>
+                <div className="skeleton skeleton-stat"></div>
+            </div>
+            <div>
+                <span>Clicked</span>
+                <div className="skeleton skeleton-stat"></div>
+            </div>
+        </div>
+        <div className="campaign-card-footer">
+            <div className="skeleton skeleton-text" style={{width: '40%'}}></div>
+        </div>
+    </div>
+);
+
 const CampaignsView = ({ apiKey }: { apiKey: string }) => {
     const { data: campaigns, loading, error } = useApiV4('/campaigns', apiKey);
+    
+    const getBadgeTypeForStatus = (statusName: string) => {
+        const lowerStatus = statusName.toLowerCase();
+        if (lowerStatus === 'sent') return 'success';
+        if (lowerStatus === 'draft') return 'default';
+        if (lowerStatus === 'processing' || lowerStatus === 'sending') return 'info';
+        if (lowerStatus === 'cancelled') return 'warning';
+        return 'default';
+    }
+
+    if (loading) {
+        return (
+            <div className="campaign-grid">
+                {Array.from({ length: 6 }).map((_, index) => <CampaignCardSkeleton key={index} />)}
+            </div>
+        );
+    }
+    
+    if (error) return <ErrorMessage error={error} />;
+    
+    if (!campaigns || campaigns.length === 0) {
+        return <CenteredMessage>No campaigns found.</CenteredMessage>;
+    }
 
     return (
-        <div>
-            {loading && <CenteredMessage><Loader /></CenteredMessage>}
-            {error && <ErrorMessage error={error} />}
-            <div className="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Subject</th>
-                            <th>Status</th>
-                            <th>Recipients</th>
-                            <th>Sent Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {campaigns?.length > 0 ? (
-                            campaigns.map((campaign: any) => (
-                                <tr key={campaign.Name}>
-                                    <td>{campaign.Name}</td>
-                                    <td>{campaign.Content?.[0]?.Subject || 'N/A'}</td>
-                                    <td><Badge text={campaign.Status} type={campaign.Status === 'Sent' ? 'success' : 'default'}/></td>
-                                    <td>{(campaign.Recipients?.length ?? 0).toLocaleString()}</td>
-                                    <td>{formatDateForDisplay(campaign.Content?.[0]?.DateAdded)}</td>
-                                </tr>
-                            ))
-                        ) : (
-                             <tr>
-                                <td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>
-                                    No campaigns found.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+        <div className="campaign-grid">
+            {campaigns.map((campaign: any) => (
+                <div key={campaign.Name} className="campaign-card">
+                    <div className="campaign-card-header">
+                        <h3>{campaign.Name}</h3>
+                        <Badge text={campaign.Status?.Name} type={getBadgeTypeForStatus(campaign.Status?.Name)} />
+                    </div>
+                    <div className="campaign-card-body">
+                        <p className="campaign-subject">
+                            {campaign.Content?.[0]?.Subject || 'No Subject'}
+                        </p>
+                    </div>
+                    <div className="campaign-stats">
+                        <div>
+                            <span>Recipients</span>
+                            <strong>{campaign.Status?.Recipients?.toLocaleString() ?? '0'}</strong>
+                        </div>
+                        <div>
+                            <span>Opened</span>
+                            <strong>{campaign.Status?.Opened?.toLocaleString() ?? '0'}</strong>
+                        </div>
+                        <div>
+                            <span>Clicked</span>
+                            <strong>{campaign.Status?.Clicked?.toLocaleString() ?? '0'}</strong>
+                        </div>
+                    </div>
+                    <div className="campaign-card-footer">
+                       <span>Sent: {formatDateForDisplay(campaign.Content?.[0]?.DateAdded)}</span>
+                    </div>
+                </div>
+            ))}
         </div>
     );
 };
 
+
+const DomainDNSRecords = ({ apiKey, domainName }: { apiKey: string, domainName: string }) => {
+    const { data: verificationDetails, loading, error } = useApiV4(`/verifications/domains/${encodeURIComponent(domainName)}`, apiKey);
+
+    if (loading) return <div className="expanded-loader"><Loader /></div>;
+    if (error) return <div className="domain-card-expanded-content"><ErrorMessage error={error} /></div>;
+    if (!verificationDetails) return <div className="domain-card-expanded-content"><p>Could not load DNS records.</p></div>;
+
+    const spfRecord = verificationDetails.SpfRecord || verificationDetails.spfrecord || 'N/A';
+    const dkimRecord = verificationDetails.DkimRecord || verificationDetails.dkimrecord || 'N/A';
+    const trackingRecord = verificationDetails.TrackingRecord || verificationDetails.trackingrecord || 'N/A';
+
+    return (
+        <div className="domain-card-expanded-content">
+            <p>Add these records to your domain's DNS settings to ensure delivery.</p>
+            <div className="dns-record">
+                <label>SPF Record (TXT)</label>
+                <div className="dns-record-name"><span>Name/Host:</span> @ or your domain</div>
+                <input type="text" readOnly value={spfRecord} onClick={(e) => (e.target as HTMLInputElement).select()} />
+            </div>
+            <div className="dns-record">
+                <label>DKIM Record (TXT)</label>
+                <div className="dns-record-name"><span>Name/Host:</span> api._domainkey</div>
+                <input type="text" readOnly value={dkimRecord} onClick={(e) => (e.target as HTMLInputElement).select()} />
+            </div>
+            <div className="dns-record">
+                <label>Tracking CNAME Record</label>
+                <div className="dns-record-name"><span>Name/Host:</span> tracking</div>
+                <input type="text" readOnly value={trackingRecord} onClick={(e) => (e.target as HTMLInputElement).select()} />
+            </div>
+        </div>
+    );
+};
 
 const DomainsView = ({ apiKey }: { apiKey: string }) => {
     const [refetchIndex, setRefetchIndex] = useState(0);
@@ -1073,16 +1157,19 @@ const DomainsView = ({ apiKey }: { apiKey: string }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [expandedDomain, setExpandedDomain] = useState<string | null>(null);
 
-    const { data: domains, loading, error } = useApiV4('/verifications/domains', apiKey, {}, refetchIndex);
-    const refetch = () => setRefetchIndex(i => i + 1);
+    const { data, loading, error } = useApiV4('/domains', apiKey, {}, refetchIndex);
+    const refetch = () => {
+        setExpandedDomain(null);
+        setRefetchIndex(i => i + 1);
+    }
 
     const handleAddDomain = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newDomain) return;
         setIsSubmitting(true);
         try {
-            await apiFetchV4('/verifications/domains', apiKey, { method: 'POST', body: { Domain: newDomain } });
-            setActionStatus({ type: 'success', message: `Domain "${newDomain}" added. Please verify DNS records.` });
+            await apiFetchV4('/domains', apiKey, { method: 'POST', body: { Domain: newDomain } });
+            setActionStatus({ type: 'success', message: `Domain "${newDomain}" added. Please add DNS records and verify.` });
             setNewDomain('');
             refetch();
         } catch (err: any) {
@@ -1095,7 +1182,7 @@ const DomainsView = ({ apiKey }: { apiKey: string }) => {
     const handleDeleteDomain = async (domainName: string) => {
         if (!window.confirm(`Are you sure you want to delete "${domainName}"?`)) return;
         try {
-            await apiFetchV4(`/verifications/domains/${encodeURIComponent(domainName)}`, apiKey, { method: 'DELETE' });
+            await apiFetchV4(`/domains/${encodeURIComponent(domainName)}`, apiKey, { method: 'DELETE' });
             setActionStatus({ type: 'success', message: `Domain "${domainName}" deleted.` });
             refetch();
         } catch (err: any) {
@@ -1105,13 +1192,17 @@ const DomainsView = ({ apiKey }: { apiKey: string }) => {
 
     const handleVerifyDomain = async (domainName: string) => {
         try {
-            await apiFetchV4(`/verifications/domains/${encodeURIComponent(domainName)}/verify`, apiKey, { method: 'PUT' });
-            setActionStatus({ type: 'success', message: `Verification initiated for "${domainName}". DNS changes can take time to propagate.` });
-            refetch();
+            await apiFetchV4(`/domains/${encodeURIComponent(domainName)}/verify`, apiKey, { method: 'PUT' });
+            setActionStatus({ type: 'success', message: `Verification re-check initiated for "${domainName}". Status will update shortly.` });
+            setTimeout(refetch, 3000); // Give API some time before refetching
         } catch (err: any) {
-            setActionStatus({ type: 'error', message: `Failed to verify domain: ${err.message}` });
+            setActionStatus({ type: 'error', message: `Failed to start verification: ${err.message}` });
         }
     }
+    
+    const domainsList = Array.isArray(data) ? data : [];
+    const isNotFoundError = error && (error.message.includes('Not Found') || error.message.includes('not found'));
+    const showNoDomainsMessage = !loading && !error && domainsList.length === 0;
 
     return (
         <div>
@@ -1130,68 +1221,61 @@ const DomainsView = ({ apiKey }: { apiKey: string }) => {
                     </button>
                 </form>
             </div>
-             {loading && <CenteredMessage><Loader /></CenteredMessage>}
-            {error && <ErrorMessage error={error} />}
-             {!loading && domains?.length === 0 && <CenteredMessage>No domains found. Add one to start sending.</CenteredMessage>}
-            <div className="card-grid domain-grid">
-                {domains?.map((domain: any) => (
-                    <div key={domain.Domain} className="card domain-card">
-                        <div className="domain-card-header">
-                            <h3>{domain.Domain}</h3>
-                            <div className="action-buttons">
-                                <button className="btn" onClick={() => handleVerifyDomain(domain.Domain)}>Verify</button>
-                                <button className="btn-icon btn-icon-danger" onClick={() => handleDeleteDomain(domain.Domain)}>
-                                    <Icon path={ICONS.DELETE} />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="domain-card-body">
-                            <div className="domain-card-statuses">
-                                <div><span>SPF</span> <Badge text={domain.SpfStatus} type={domain.SpfStatus === 'Verified' ? 'success' : 'warning'} /></div>
-                                <div><span>DKIM</span> <Badge text={domain.DkimStatus} type={domain.DkimStatus === 'Verified' ? 'success' : 'warning'} /></div>
-                                <div><span>Tracking</span> <Badge text={domain.TrackingStatus} type={domain.TrackingStatus === 'Verified' ? 'success' : 'warning'} /></div>
-                                <div><span>MX</span> <Badge text={domain.MXStatus} type={domain.MXStatus === 'Verified' ? 'success' : 'warning'} /></div>
-                            </div>
-                        </div>
-                        <div className="domain-card-footer" onClick={() => setExpandedDomain(d => d === domain.Domain ? null : domain.Domain)}>
-                            <span>Show DNS Records</span>
-                            <Icon path={ICONS.CHEVRON_DOWN} className={expandedDomain === domain.Domain ? 'expanded' : ''} />
-                        </div>
-                        {expandedDomain === domain.Domain && (
-                            <div className="domain-card-expanded-content">
-                                <p>Add these records to your domain's DNS settings.</p>
-                                <div className="dns-record">
-                                    <label>SPF Record (TXT)</label>
-                                    <div className="dns-record-name"><span>Name:</span> @</div>
-                                    <input type="text" readOnly value={domain.SpfRecord} />
-                                </div>
-                                <div className="dns-record">
-                                    <label>DKIM Record (TXT)</label>
-                                    <div className="dns-record-name"><span>Name:</span> api._domainkey</div>
-                                    <input type="text" readOnly value={domain.DkimRecord} />
-                                </div>
-                                 <div className="dns-record">
-                                    <label>Tracking CNAME Record</label>
-                                    <div className="dns-record-name"><span>Name:</span> tracking</div>
-                                    <input type="text" readOnly value={domain.TrackingRecord} />
+            {loading && <CenteredMessage><Loader /></CenteredMessage>}
+            {error && !isNotFoundError && <ErrorMessage error={error} />}
+            {showNoDomainsMessage && <CenteredMessage>No domains found. Add one to start sending.</CenteredMessage>}
+            
+            {domainsList.length > 0 && <div className="card-grid domain-grid">
+                {domainsList.map((domain: any) => {
+                    const domainName = domain.Domain;
+                    if (!domainName) return null;
+                    
+                    const isSpfVerified = String(domain.Spf).toLowerCase() === 'true';
+                    const isDkimVerified = String(domain.Dkim).toLowerCase() === 'true';
+                    const isMxVerified = String(domain.MX).toLowerCase() === 'true';
+                    const isTrackingVerified = String(domain.TrackingStatus).toLowerCase() === 'validated';
+                    const isExpanded = expandedDomain === domainName;
+
+                    return (
+                        <div key={domainName} className="card domain-card">
+                            <div className="domain-card-header">
+                                <h3>{domainName}</h3>
+                                <div className="action-buttons">
+                                    <button className="btn" onClick={() => handleVerifyDomain(domainName)}>Re-check</button>
+                                    <button className="btn-icon btn-icon-danger" onClick={() => handleDeleteDomain(domainName)} aria-label={`Delete ${domainName}`}>
+                                        <Icon path={ICONS.DELETE} />
+                                    </button>
                                 </div>
                             </div>
-                        )}
-                    </div>
-                ))}
-            </div>
+                            <div className="domain-card-body">
+                                <div className="domain-card-statuses">
+                                    <div><span>SPF</span> <Badge text={isSpfVerified ? 'Verified' : 'Missing'} type={isSpfVerified ? 'success' : 'warning'} /></div>
+                                    <div><span>DKIM</span> <Badge text={isDkimVerified ? 'Verified' : 'Missing'} type={isDkimVerified ? 'success' : 'warning'} /></div>
+                                    <div><span>Tracking</span> <Badge text={isTrackingVerified ? 'Verified' : 'Missing'} type={isTrackingVerified ? 'success' : 'warning'} /></div>
+                                    <div><span>MX</span> <Badge text={isMxVerified ? 'Verified' : 'Missing'} type={isMxVerified ? 'success' : 'warning'} /></div>
+                                </div>
+                            </div>
+                            <div className="domain-card-footer" onClick={() => setExpandedDomain(d => d === domainName ? null : domainName)} role="button" aria-expanded={isExpanded}>
+                                <span>Show DNS Records</span>
+                                <Icon path={ICONS.CHEVRON_DOWN} className={isExpanded ? 'expanded' : ''} />
+                            </div>
+                            {isExpanded && <DomainDNSRecords apiKey={apiKey} domainName={domainName} />}
+                        </div>
+                    )
+                })}
+            </div>}
         </div>
     );
 };
 
 
 const SmtpView = ({ apiKey, user }: { apiKey: string, user: any }) => {
-    const { data, loading, error } = useApi('/account/loadsmtp', apiKey);
+    if (!user) return <CenteredMessage><Loader /></CenteredMessage>;
 
-    if (loading) return <CenteredMessage><Loader /></CenteredMessage>;
-    if (error) return <ErrorMessage error={error} />;
-    if (!data) return <CenteredMessage>Could not load SMTP credentials.</CenteredMessage>;
-
+    const smtpDetails = {
+        server: 'smtp.elasticemail.com',
+        ports: '25, 2525, 587, 465 (SSL)'
+    };
 
     return (
         <div className="card-grid smtp-grid">
@@ -1200,9 +1284,9 @@ const SmtpView = ({ apiKey, user }: { apiKey: string, user: any }) => {
                     <h3>SMTP Credentials</h3>
                 </div>
                 <div className="smtp-card-body">
-                    <div className="smtp-detail-item"><label>Server</label> <strong>{data.server}</strong></div>
-                    <div className="smtp-detail-item"><label>Port</label> <strong>{data.port}</strong></div>
-                    <div className="smtp-detail-item full-span"><label>Username</label> <strong className="monospace">{user?.email}</strong></div>
+                    <div className="smtp-detail-item"><label>Server</label> <strong>{smtpDetails.server}</strong></div>
+                    <div className="smtp-detail-item"><label>Ports</label> <strong>{smtpDetails.ports}</strong></div>
+                    <div className="smtp-detail-item full-span"><label>Username</label> <strong className="monospace">{user.email}</strong></div>
                     <div className="smtp-detail-item full-span">
                         <label>Password</label>
                         <div className="secret-value-wrapper">

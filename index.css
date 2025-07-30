@@ -1,3 +1,5 @@
+
+
 :root {
   --primary-color: #1A2B3C;
   --secondary-color: #007BFF;
@@ -753,44 +755,6 @@ td {
     transform: rotate(180deg);
 }
 
-/* Domain-specific DNS records & Cards */
-.dns-records-container {
-    padding: 1.5rem;
-    background-color: #F8FAFC;
-}
-.dns-record {
-    margin-bottom: 1rem;
-}
-.dns-record label {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 500;
-    margin-bottom: 0.25rem;
-}
-.dns-record-name {
-    font-size: 0.8rem;
-    color: var(--subtle-text-color);
-    margin-bottom: 0.5rem;
-    background: #eef2f7;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    display: inline-block;
-}
-.dns-record-name span {
-    font-weight: 600;
-}
-
-.dns-record input {
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    background-color: var(--surface-color);
-    font-family: monospace;
-    font-size: 0.875rem;
-    color: var(--text-color);
-}
-
 .domain-grid {
     grid-template-columns: 1fr;
 }
@@ -817,7 +781,7 @@ td {
 }
 .domain-card-statuses {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     gap: 1rem;
 }
 .domain-card-statuses > div {
@@ -858,6 +822,55 @@ td {
     background-color: #F8FAFC;
     padding: 0 1.5rem 1.5rem;
 }
+
+.expanded-loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    background-color: #F8FAFC;
+}
+.expanded-loader .loader {
+    width: 24px;
+    height: 24px;
+}
+
+.dns-record {
+    margin-bottom: 1rem;
+}
+.dns-record:last-child {
+    margin-bottom: 0;
+}
+.dns-record label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+.dns-record-name {
+    font-size: 0.8rem;
+    color: var(--subtle-text-color);
+    margin-bottom: 0.5rem;
+    background: #eef2f7;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+}
+.dns-record-name span {
+    font-weight: 600;
+}
+.dns-record input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--surface-color);
+    font-family: monospace;
+    font-size: 0.875rem;
+    color: var(--text-color);
+    cursor: text;
+}
+
 
 /* Email List View Specific Styles */
 .list-grid {
@@ -1243,7 +1256,7 @@ td {
 .smtp-detail-item.full-span {
     grid-column: 1 / -1;
 }
-.smtp-detail-item span {
+.smtp-detail-item label, .smtp-detail-item span {
     display: block;
     font-size: 0.875rem;
     color: var(--subtle-text-color);
@@ -1546,6 +1559,116 @@ td {
     border-radius: 4px;
     color: var(--text-color);
 }
+
+/* Campaigns View Redesign */
+.campaign-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.campaign-card {
+    background: var(--surface-color);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.campaign-card-header {
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.campaign-card-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0;
+    word-break: break-word;
+}
+
+.campaign-card-body {
+    padding: 0.5rem 1.25rem 1.25rem;
+}
+
+.campaign-subject {
+    font-size: 0.875rem;
+    color: var(--subtle-text-color);
+    line-height: 1.4;
+}
+
+.campaign-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--border-color);
+    background-color: #F8FAFC;
+    padding: 1rem 1.25rem;
+    text-align: center;
+}
+
+.campaign-stats > div > span {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--subtle-text-color);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.campaign-stats > div > strong {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.campaign-card-footer {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.8rem;
+    color: var(--subtle-text-color);
+    background-color: #F8FAFC;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Skeleton Loader for Campaigns */
+@keyframes skeleton-loading {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+
+.skeleton {
+    animation: skeleton-loading 1.2s ease-in-out infinite;
+    background-color: #e2e8f0;
+    background-image: linear-gradient(90deg, #e2e8f0, #f8fafc, #e2e8f0);
+    background-size: 200px 100%;
+    background-repeat: no-repeat;
+    border-radius: 4px;
+    color: transparent;
+}
+
+.skeleton-text {
+    height: 1em;
+    width: 75%;
+}
+.skeleton-title {
+    height: 1.25em;
+    width: 50%;
+    margin-bottom: 0.5rem;
+}
+.skeleton-badge {
+    width: 60px;
+    height: 24px;
+    border-radius: 99px;
+}
+.skeleton-stat {
+    width: 40px;
+    height: 1.25em;
+    margin: 0.25rem auto 0;
+}
+
 
 /* Responsive */
 @media (max-width: 992px) {

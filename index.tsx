@@ -13,7 +13,6 @@ const Icon = ({ path, className = '' }: { path: string; className?: string }) =>
 
 const ICONS = {
     ACCOUNT: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
-    API: "M16 18l6-6-6-6M8 6l-6 6 6 6",
     BOUNCED: "M9 10l-5 5 5 5M20 4v7a4 4 0 01-4 4H4",
     CALENDAR: "M8 2v4M16 2v4M3 10h18M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
     CAMPAIGNS: "M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0",
@@ -23,143 +22,180 @@ const ICONS = {
     CONTACTS: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
     CREDIT_CARD: "M22 8a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8zM6 14h4v-2H6v2z",
     DEFAULT: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z",
-    DELETE: "M3 6h18m-2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6",
-    DOMAINS: "M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm-4-9h8m-4-4v8",
-    EDIT: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7m-5-6l6 6M12.5 7.5L20 15",
-    EMAIL: "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM22 6l-10 7L2 6",
-    EMAIL_LIST: "M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM14 11h9m-9 4h9m-9 4h9",
-    EYE: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
-    FILTER: "M22 3H2l8 9.46V19l4 2v-8.54L22 3z",
-    GLOBE: "M22 12A10 10 0 1 1 12 2a10 10 0 0 1 10 10zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z",
-    LOG_OUT: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",
+    DELETE: "M3 6h18m-2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2",
+    DOMAINS: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20",
+    EMAIL_LIST: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",
+    EYE: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z",
+    EYE_OFF: "M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22",
+    KEY: "M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4",
+    LOGOUT: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",
+    MAIL: "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM22 6l-10 7L2 6",
+    PENCIL: "M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z",
     PLUS: "M12 5v14m-7-7h14",
-    PUZZLE: "M20.5 10H19V8.5a1.5 1.5 0 0 0-3 0V10H14.5a1.5 1.5 0 0 0 0 3H16v1.5a1.5 1.5 0 0 0 3 0V13h1.5a1.5 1.5 0 0 0 0-3zM3.5 10H5v1.5a1.5 1.5 0 0 0 3 0V10h1.5a1.5 1.5 0 0 0 0-3H8V5.5a1.5 1.5 0 0 0-3 0V7H3.5a1.5 1.5 0 0 0 0 3zM10 14.5a1.5 1.5 0 0 0-3 0V16H5.5a1.5 1.5 0 0 0 0 3H7v1.5a1.5 1.5 0 0 0 3 0V19h1.5a1.5 1.5 0 0 0 0-3H10v-1.5zM13 3.5a1.5 1.5 0 0 0 0 3H14.5a1.5 1.5 0 0 0 3 0V5h1.5a1.5 1.5 0 0 0 0-3H19V0.5a1.5 1.5 0 0 0-3 0V2h-1.5a1.5 1.5 0 0 0-1.5 1.5z",
-    REPUTATION: "M22 12h-4l-3 9L9 3l-3 9H2",
-    SEARCH: "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.35-4.35",
-    SEND: "M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z",
-    SETTINGS: "M12 6V3M12 21v-3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M2 12h3M19 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12",
-    SMTP: "M12 22a4 4 0 0 0 4-4H8a4 4 0 0 0 4 4zM12 2a4 4 0 0 0-4 4h8a4 4 0 0 0-4-4zM22 12a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v4a4 4 0 0 0 4 4h12a4 4 0 0 0 4-4v-4z",
-    STATISTICS: "M12 20V10M18 20V4M6 20v-4",
-    UNLOCK: "M7 11V7a5 5 0 0 1 10 0v4m-5 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zM5 11h14v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V11z",
-    USER_PLUS: "M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M8.5 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM20 8v6m-3-3h6",
-    USERS: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
+    PRICE_TAG: "M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7H7.01",
+    PUZZLE: "M20.5 11H19v-2.14a2.5 2.5 0 0 0-2.5-2.5H14V4.5a2.5 2.5 0 0 0-2.5-2.5h-3A2.5 2.5 0 0 0 6 4.5V6H3.5a2.5 2.5 0 0 0-2.5 2.5V11H2.5a2.5 2.5 0 0 1 0 5H1v2.14a2.5 2.5 0 0 0 2.5 2.5H6V23.5a2.5 2.5 0 0 0 2.5 2.5h3A2.5 2.5 0 0 0 14 23.5V22h2.5a2.5 2.5 0 0 0 2.5-2.5V17h1.5a2.5 2.5 0 0 1 0-5z",
+    SEND_EMAIL: "M22 2L11 13L2 9L22 2z M22 2L15 22L11 13L2 9L22 2z",
+    SERVER: "M23 12H1m22-6H1m0 12H1M6 6v12M18 6v12",
+    STATS: "M2.5 2v6h6M2.5 22v-6h6M22 11.5A10.5 10.5 0 0 0 11.5 1 10.5 10.5 0 0 0 1 11.5",
+    TRENDING_UP: "M23 6l-9.5 9.5-5-5L1 18",
+    USER_PLUS: "M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M8.5 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM20 8v6M23 11h-6",
+    VERIFY: "M22 11.08V12a10 10 0 1 1-5.93-9.14",
 };
 
-// --- API Helpers ---
-const apiFetch = async (endpoint: string, apiKey: string) => {
-    const response = await fetch(`${ELASTIC_EMAIL_API_BASE}${endpoint}?apiKey=${apiKey}`);
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'API request failed');
-    }
-    return response.json();
-};
+// --- API Helper for v2 ---
+const apiFetch = async (endpoint: string, apiKey: string, options: { method?: 'GET' | 'POST', params?: Record<string, any> } = {}) => {
+  const { method = 'GET', params = {} } = options;
+  
+  const allParams = new URLSearchParams({
+    apikey: apiKey,
+    ...params
+  });
 
-const useApi = (endpoint: string, apiKey: string) => {
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const url = `${ELASTIC_EMAIL_API_BASE}${endpoint}`;
+  let response;
 
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!apiKey) {
-                setLoading(false);
-                return;
-            }
-            try {
-                setLoading(true);
-                setError(null);
-                const result = await apiFetch(endpoint, apiKey);
-                setData(result.data);
-            } catch (err: any) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, [endpoint, apiKey]);
-
-    return { data, loading, error };
-};
-
-const apiFetchV4 = async (endpoint: string, apiKey: string, options: RequestInit = {}) => {
-    const headers = {
-        'Content-Type': 'application/json',
-        'X-ElasticEmail-ApiKey': apiKey,
-        ...options.headers,
-    };
-
-    const response = await fetch(`${ELASTIC_EMAIL_API_V4_BASE}${endpoint}`, {
-        ...options,
-        headers,
+  if (method === 'POST') {
+    response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+      },
+      body: allParams
     });
+  } else { // GET
+    response = await fetch(`${url}?${allParams.toString()}`);
+  }
+
+  const data = await response.json();
+  
+  if (!data.success) {
+    throw new Error(data.error || `HTTP error! status: ${response.status}`);
+  }
+  
+  return data.data;
+};
+
+// --- API Helper for v4 ---
+const apiFetchV4 = async (endpoint: string, apiKey: string, options: { method?: 'GET' | 'POST' | 'PUT' | 'DELETE', params?: Record<string, any>, body?: any } = {}) => {
+    const { method = 'GET', params = {}, body = null } = options;
+    const queryParams = new URLSearchParams(params).toString();
+    const url = `${ELASTIC_EMAIL_API_V4_BASE}${endpoint}${queryParams ? `?${queryParams}` : ''}`;
+
+    const fetchOptions: RequestInit = {
+        method,
+        headers: {
+            'X-ElasticEmail-ApiKey': apiKey,
+        }
+    };
+    
+    if (body && (method === 'POST' || method === 'PUT')) {
+        fetchOptions.headers['Content-Type'] = 'application/json';
+        fetchOptions.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(url, fetchOptions);
 
     if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
         try {
             const errorData = await response.json();
-            throw new Error(errorData.Error || 'V4 API request failed');
+            errorMessage = errorData.Error || 'An unknown API error occurred.';
         } catch (e) {
-             throw new Error(`V4 API request failed with status ${response.status}`);
+            // response was not json, use default message
         }
+        throw new Error(errorMessage);
     }
     
-    if (response.status === 204 || options.method === 'DELETE') {
-        return null; // No content to parse
+    if (response.status === 204) { // Handle No Content for DELETE
+        return {};
     }
 
-    return response.json();
-};
-
-const useApiV4 = <T,>(endpoint: string, apiKey: string, options: RequestInit = {}) => {
-    const [data, setData] = useState<T | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    const fetchData = useCallback(async () => {
-        if (!apiKey) {
-            setLoading(false);
-            return;
-        }
-        try {
-            setLoading(true);
-            setError(null);
-            const result = await apiFetchV4(endpoint, apiKey, options);
-            setData(result);
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    }, [endpoint, apiKey, JSON.stringify(options)]);
-
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
-
-    return { data, loading, error, refetch: fetchData };
+    const text = await response.text();
+    return text ? JSON.parse(text) : {};
 };
 
 
-// --- UI Components ---
+// --- Custom Hook for API calls (v2) ---
+const useApi = (endpoint, apiKey, params = {}, refetchIndex = 0) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  const paramsString = JSON.stringify(params);
+
+  useEffect(() => {
+    if (!apiKey || !endpoint) return;
+
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await apiFetch(endpoint, apiKey, { params: JSON.parse(paramsString) });
+        setData(result);
+      } catch (err) {
+        setError({message: err.message, endpoint});
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [endpoint, apiKey, paramsString, refetchIndex]);
+
+  return { data, loading, error };
+};
+
+// --- Custom Hook for API calls (v4) ---
+const useApiV4 = (endpoint, apiKey, params = {}, refetchIndex = 0) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const paramsString = JSON.stringify(params);
+
+  useEffect(() => {
+    if (!apiKey || !endpoint) return;
+
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await apiFetchV4(endpoint, apiKey, { params: JSON.parse(paramsString) });
+        setData(result);
+      } catch (err) {
+        setError({ message: err.message, endpoint });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [endpoint, apiKey, paramsString, refetchIndex]);
+
+  return { data, loading, error };
+};
+
+// --- Reusable Components ---
 const Loader = () => <div className="loader"></div>;
 
-const CenteredLoader = () => <div className="centered-container"><Loader /></div>;
+const ActionStatus = ({ status }) => {
+    if (!status?.message) return null;
+    return (
+        <div className={`action-status ${status.type}`}>
+            {status.message}
+        </div>
+    );
+};
 
-const ErrorMessage = ({ message, children }: { message: string, children?: ReactNode }) => (
-    <div className="error-message">
-        <strong>Error:</strong> {message}
-        {children}
-    </div>
-);
+const Modal = ({ isOpen, onClose, title, children }: { isOpen: boolean; onClose: () => void; title: string; children: ReactNode }) => {
+    useEffect(() => {
+        const handleEsc = (event) => {
+            if (event.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [onClose]);
 
-interface ModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    title: string;
-    children: ReactNode;
-}
-const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
     if (!isOpen) return null;
 
     return (
@@ -167,934 +203,1410 @@ const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
                     <h3>{title}</h3>
-                    <button onClick={onClose} className="modal-close-btn">&times;</button>
+                    <button className="modal-close-btn" onClick={onClose} aria-label="Close modal">
+                        &times;
+                    </button>
                 </div>
-                {children}
+                <div className="modal-body">
+                    {children}
+                </div>
             </div>
         </div>
     );
 };
 
-const SecretViewer = ({ secretType, secret, onDone }: {secretType: string, secret: string, onDone: () => void}) => {
-    const [copied, setCopied] = useState(false);
 
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(secret);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
+const ErrorMessage = ({ error }) => (
+  <div className="error-message">
+    <strong>API Error on <code>{error.endpoint}</code>:</strong> {error.message}
+  </div>
+);
 
-    return (
-        <Modal isOpen={true} onClose={onDone} title={`${secretType} Created Successfully`}>
-            <div>
-                <p>Your new {secretType.toLowerCase()} has been created. For security reasons, this is the **only time** the secret will be displayed. Please copy it and store it in a safe place.</p>
-                <div className="secret-display">
-                    <label>{secretType}</label>
-                     <div className="secret-value-wrapper">
-                        <input type="text" readOnly value={secret} />
-                        <button onClick={copyToClipboard} className="btn">
-                            {copied ? 'Copied!' : 'Copy'}
-                        </button>
-                    </div>
-                </div>
-                <div className="form-actions">
-                    <button onClick={onDone} className="btn btn-primary">Done</button>
-                </div>
-            </div>
-        </Modal>
-    );
-};
+const CenteredMessage = ({ children }: { children?: ReactNode }) => (
+    <div className="centered-container" style={{height: '200px'}}>
+        {children}
+    </div>
+);
 
-// --- App Views ---
+const Badge = ({ text, type = 'default' }) => (
+    <span className={`badge badge-${type}`}>{text}</span>
+);
 
-const StatisticsView = ({ apiKey }: { apiKey: string }) => {
-    const { data, loading, error } = useApi('/log/summary', apiKey);
-
-    const StatCard = ({ title, value, icon }: { title: string, value: any, icon: string }) => (
-        <div className="card account-card">
-            <div className="card-icon-wrapper">
-                <Icon path={icon} />
-            </div>
-            <div className="card-details">
-                <h3 className="card-title">{title}</h3>
-                <div className="card-content">{loading ? '...' : value}</div>
-            </div>
-        </div>
-    );
-
-    if (loading) return <CenteredLoader />;
-    if (error) return <ErrorMessage message={error} />;
-
-    return (
-        <div>
-            <div className="content-header">
-                <h2>Statistics</h2>
-                <p>An overview of your email activity.</p>
-            </div>
-            <div className="card-grid account-grid">
-                <StatCard title="Emails Sent" value={data.log.TotalSent?.toLocaleString()} icon={ICONS.SEND} />
-                <StatCard title="Emails Bounced" value={data.log.Bounced?.toLocaleString()} icon={ICONS.BOUNCED} />
-                <StatCard title="Emails Opened" value={(data.log.Opened?.toLocaleString() ?? '0')} icon={ICONS.EYE} />
-                <StatCard title="Emails Clicked" value={(data.log.Clicked?.toLocaleString() ?? '0')} icon={ICONS.CLICK} />
-                <StatCard title="Complaints" value={data.log.Abuse?.toLocaleString()} icon={ICONS.COMPLAINT} />
-                <StatCard title="Emails Unsubscribed" value={data.log.Unsubscribed?.toLocaleString()} icon={ICONS.LOG_OUT} />
-            </div>
-        </div>
-    );
-};
-
-const AccountDataCard = ({ title, value, icon, children }: { title: string, value?: any, icon: string, children?: ReactNode }) => (
+const AccountDataCard = ({ iconPath, title, children }: { iconPath: string; title: string; children?: ReactNode }) => (
     <div className="card account-card">
         <div className="card-icon-wrapper">
-            <Icon path={icon} />
+            <Icon path={iconPath} />
         </div>
         <div className="card-details">
-            <h3 className="card-title">{title}</h3>
-            <div className="card-content">
-                {children || value}
-            </div>
+            <div className="card-title">{title}</div>
+            <div className="card-content">{children}</div>
         </div>
     </div>
 );
 
-const AccountView = ({ apiKey }: { apiKey: string }) => {
-    const { data, loading, error } = useApi('/account/load', apiKey);
+// --- Helper Functions ---
+const getPastDateByDays = (days) => {
+    const date = new Date();
+    date.setDate(date.getDate() - days);
+    return date;
+}
+const getPastDateByMonths = (months) => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - months);
+    return date;
+};
+const formatDateForApiV4 = (date) => {
+    return date.toISOString().slice(0, 19);
+};
+const getPastDateByYears = (years) => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() - years);
+    return date;
+};
 
-    if (loading) return <CenteredLoader />;
-    if (error) return <ErrorMessage message={error} />;
+// --- View Components ---
 
-    const getReputationColor = (rep: number) => {
-        if (rep > 95) return 'good';
-        if (rep > 80) return 'medium';
-        return 'bad';
+const StatisticsView = ({ apiKey }) => {
+    const [duration, setDuration] = useState('3months');
+
+    const durationOptions = {
+        '7days': { label: 'Last 7 days', from: () => getPastDateByDays(7) },
+        '14days': { label: 'Last 14 days', from: () => getPastDateByDays(14) },
+        '30days': { label: 'Last 30 days', from: () => getPastDateByDays(30) },
+        '3months': { label: 'Last 3 months', from: () => getPastDateByMonths(3) },
+        '6months': { label: 'Last 6 months', from: () => getPastDateByMonths(6) },
+        '1year': { label: 'Last year', from: () => getPastDateByYears(1) },
     };
-    
-    const reputation = data?.Reputation ? data.Reputation * 100 : 0;
 
-    const getStatusInfo = (status: string) => {
-        switch (status?.toLowerCase()) {
-            case 'active': return { className: 'badge-success', text: 'Active' };
-            case 'in review': return { className: 'badge-warning', text: 'In Review' };
-            case 'abuse': return { className: 'badge-danger', text: 'Abuse Block' };
-            case 'needs verification': return { className: 'badge-info', text: 'Needs Verification' };
-            default: return { className: 'badge-default', text: status || 'Unknown' };
+    const apiParams = {
+        from: formatDateForApiV4(durationOptions[duration].from()),
+    };
+    const { data: stats, loading, error } = useApiV4(`/statistics`, apiKey, apiParams);
+    
+    const filterControl = (
+        <div className="view-controls">
+            <label htmlFor="duration-select">Date Range:</label>
+            <select id="duration-select" value={duration} onChange={(e) => setDuration(e.target.value)}>
+                {Object.entries(durationOptions).map(([key, { label }]) => (
+                    <option key={key} value={key}>{label}</option>
+                ))}
+            </select>
+        </div>
+    );
+
+    if (error) return (
+        <>
+            {filterControl}
+            <ErrorMessage error={error} />
+        </>
+    );
+
+    return (
+        <>
+            {filterControl}
+            {loading ? (
+                <CenteredMessage><Loader /></CenteredMessage>
+            ) : (!stats || Object.keys(stats).length === 0) ? (
+                <CenteredMessage>No statistics data found for the {durationOptions[duration].label.toLowerCase()}.</CenteredMessage>
+            ) : (
+                <div className="card-grid account-grid">
+                    <AccountDataCard title="Total Emails" iconPath={ICONS.MAIL}>
+                        {stats.EmailTotal?.toLocaleString() ?? '0'}
+                    </AccountDataCard>
+                    <AccountDataCard title="Recipients" iconPath={ICONS.CONTACTS}>
+                        {stats.Recipients?.toLocaleString() ?? '0'}
+                    </AccountDataCard>
+                    <AccountDataCard title="Delivered" iconPath={ICONS.VERIFY}>
+                        {stats.Delivered?.toLocaleString() ?? '0'}
+                    </AccountDataCard>
+                    <AccountDataCard title="Opened" iconPath={ICONS.EYE}>
+                        {stats.Opened?.toLocaleString() ?? '0'}
+                    </AccountDataCard>
+                    <AccountDataCard title="Clicked" iconPath={ICONS.CLICK}>
+                        {stats.Clicked?.toLocaleString() ?? '0'}
+                    </AccountDataCard>
+                    <AccountDataCard title="Unsubscribed" iconPath={ICONS.LOGOUT}>
+                        {stats.Unsubscribed?.toLocaleString() ?? '0'}
+                    </AccountDataCard>
+                    <AccountDataCard title="Complaints" iconPath={ICONS.COMPLAINT}>
+                        {stats.Complaints?.toLocaleString() ?? '0'}
+                    </AccountDataCard>
+                     <AccountDataCard title="Bounced" iconPath={ICONS.BOUNCED}>
+                        {stats.Bounced?.toLocaleString() ?? '0'}
+                    </AccountDataCard>
+                </div>
+            )}
+        </>
+    );
+};
+
+const AccountView = ({ apiKey }) => {
+  const { data, loading, error } = useApi('/account/load', apiKey);
+
+  if (loading) return <CenteredMessage><Loader /></CenteredMessage>;
+  if (error) return <ErrorMessage error={error} />;
+  if (!data) return <CenteredMessage>No account data found.</CenteredMessage>;
+    
+  const getStatusType = (status) => {
+    const cleanStatus = String(status || '').toLowerCase().replace(/\s/g, '');
+    if (cleanStatus.includes('active')) return 'success';
+    if (cleanStatus.includes('disabled') || cleanStatus.includes('abuse')) return 'danger';
+    if (cleanStatus.includes('review') || cleanStatus.includes('verification')) return 'warning';
+    return 'default';
+  }
+  
+  const getReputationInfo = (reputation) => {
+      const score = Number(reputation || 0);
+      if (score >= 90) return { className: 'good', text: 'Excellent' };
+      if (score >= 70) return { className: 'medium', text: 'Good' };
+      return { className: 'bad', text: 'Needs Improvement' };
+  }
+  
+  const reputationInfo = getReputationInfo(data.reputation);
+
+  return (
+    <div className="card-grid account-grid">
+      <AccountDataCard title="Reputation" iconPath={ICONS.TRENDING_UP}>
+        <span className={`reputation-score ${reputationInfo.className}`}>
+            {data.reputation ? `${Number(data.reputation).toFixed(2)}%` : 'N/A'}
+        </span>
+        <span className="reputation-text">{reputationInfo.text}</span>
+      </AccountDataCard>
+      
+      <AccountDataCard title="Remaining Email Credits" iconPath={ICONS.CREDIT_CARD}>
+        {data.emailcredits?.toLocaleString() ?? 'N/A'}
+      </AccountDataCard>
+
+      <AccountDataCard title="Total Emails Sent" iconPath={ICONS.SEND_EMAIL}>
+        {data.totalemailssent?.toLocaleString() ?? '0'}
+      </AccountDataCard>
+
+      <AccountDataCard title="Total Contacts" iconPath={ICONS.CONTACTS}>
+        {data.contactscount?.toLocaleString() ?? '0'}
+      </AccountDataCard>
+      
+      <AccountDataCard title="Account Status" iconPath={ICONS.ACCOUNT}>
+        <Badge text={String(data.accountstatus || 'N/A')} type={getStatusType(data.accountstatus)} />
+      </AccountDataCard>
+      
+      <AccountDataCard title="Pricing Plan" iconPath={ICONS.PRICE_TAG}>
+        {data.priceplan || 'N/A'}
+      </AccountDataCard>
+      
+      <AccountDataCard title="Account Creation Date" iconPath={ICONS.CALENDAR}>
+        {data.datecreated ? new Date(data.datecreated).toLocaleDateString() : 'N/A'}
+      </AccountDataCard>
+      
+      <AccountDataCard title="Email" iconPath={ICONS.MAIL}>
+        {data.email}
+      </AccountDataCard>
+
+      <AccountDataCard title="Public Account ID" iconPath={ICONS.SERVER}>
+        <span className="small-text">{data.publicaccountid}</span>
+      </AccountDataCard>
+    </div>
+  );
+};
+
+const ContactsView = ({ apiKey }) => {
+    const [offset, setOffset] = useState(0);
+    const [limit] = useState(20);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+    const [refetchIndex, setRefetchIndex] = useState(0);
+    const [isAddModalOpen, setAddModalOpen] = useState(false);
+    const [viewedContactEmail, setViewedContactEmail] = useState(null);
+    const [viewedContactDetails, setViewedContactDetails] = useState(null);
+    const [isViewModalLoading, setViewModalLoading] = useState(false);
+    const [actionStatus, setActionStatus] = useState({ type: null, message: '' });
+
+    const { data: accountData } = useApi('/account/load', apiKey);
+    
+    const listApiParams: { limit: number; offset: number; search?: string; } = { limit, offset };
+    if (debouncedSearchTerm) {
+        listApiParams.search = debouncedSearchTerm;
+    }
+
+    const { data: contacts, loading, error } = useApi(
+        '/contact/list', 
+        apiKey, 
+        listApiParams, 
+        refetchIndex
+    );
+    
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+            setOffset(0);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
+
+    const refetchContacts = () => setRefetchIndex(prev => prev + 1);
+
+    const handleViewContact = async (email) => {
+        setViewedContactEmail(email);
+        setViewModalLoading(true);
+        try {
+            const details = await apiFetch('/contact/load', apiKey, { params: { email } });
+            setViewedContactDetails(details);
+        } catch (err) {
+            setViewedContactDetails({ error: err.message });
+        } finally {
+            setViewModalLoading(false);
         }
     };
 
-    const statusInfo = getStatusInfo(data.Status);
+    const handleAddContact = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
 
-    return (
-        <div>
-            <div className="content-header">
-                <h2>Account</h2>
-                <p>Your account details and status.</p>
-            </div>
-            <div className="card-grid account-grid">
-                <AccountDataCard title="Account Status" icon={ICONS.SETTINGS}>
-                    <span className={`badge ${statusInfo.className}`}>{statusInfo.text}</span>
-                </AccountDataCard>
-                <AccountDataCard title="Total Emails Sent" value={data.TotalEmailsSent?.toLocaleString()} icon={ICONS.SEND} />
-                <AccountDataCard title="Reputation" icon={ICONS.REPUTATION}>
-                     <span className={`reputation-score ${getReputationColor(reputation)}`}>
-                        {reputation.toFixed(2)}%
-                    </span>
-                </AccountDataCard>
-                <AccountDataCard title="Remaining Email Credits" value={data.EmailCredits?.toLocaleString()} icon={ICONS.CREDIT_CARD} />
-                <AccountDataCard title="Total Contacts" value={data.ContactsCount?.toLocaleString()} icon={ICONS.USERS} />
-                <AccountDataCard title="Account Creation Date" value={new Date(data.DateCreated).toLocaleDateString()} icon={ICONS.CALENDAR} />
-            </div>
-        </div>
-    );
-};
+        if (!accountData?.publicaccountid) {
+            setActionStatus({ type: 'error', message: 'Could not retrieve Public Account ID. Please refresh and try again.' });
+            return;
+        }
 
-const SendEmailView = ({ apiKey }: { apiKey: string }) => {
-    // This is a placeholder as per the original file. Full implementation can be added.
-    return (
-        <div>
-            <div className="content-header">
-                <h2>Send Email</h2>
-                <p>This feature is not yet implemented.</p>
-            </div>
-        </div>
-    );
-};
+        const newContact = {
+            email: formData.get('email'),
+            firstname: formData.get('firstname'),
+            lastname: formData.get('lastname'),
+            publicaccountid: accountData.publicaccountid
+        };
 
-const CampaignsView = ({ apiKey }: { apiKey: string }) => {
-    const { data: campaigns, loading, error } = useApiV4<any[]>('/campaigns', apiKey);
-    
-    const statusMap: { [key: number]: { text: string; className: string } } = {
-        1: { text: 'Draft', className: 'badge-default' },
-        2: { text: 'Sending', className: 'badge-info' },
-        3: { text: 'Completed', className: 'badge-success' },
-        4: { text: 'Cancelled', className: 'badge-warning' },
-        5: { text: 'Scheduled', className: 'badge-info' },
+        setActionStatus({ type: 'loading', message: 'Adding contact...' });
+        try {
+            await apiFetch('/contact/add', apiKey, { method: 'POST', params: newContact });
+            setActionStatus({ type: 'success', message: 'Contact added successfully!' });
+            setAddModalOpen(false);
+            refetchContacts();
+        } catch (err) {
+            setActionStatus({ type: 'error', message: `Failed to add contact: ${err.message}` });
+        }
     };
 
-    if (loading) return <CenteredLoader />;
-    if (error) return <ErrorMessage message={error} />;
+    const ContactDetails = ({ details }) => {
+        if (!details) return null;
+        if (details.error) return <ErrorMessage error={{ endpoint: 'contact/load', message: details.error }} />;
 
-    return (
-        <div>
-            <div className="content-header">
-                <h2>Campaigns</h2>
-                <p>Manage your email campaigns.</p>
+        const detailItems = [
+            { label: 'Email', value: details.email },
+            { label: 'First Name', value: details.firstname },
+            { label: 'Last Name', value: details.lastname },
+            { label: 'Status', value: <Badge text={String(details.status || 'N/A')} type={String(details.status || '').toLowerCase() === 'active' ? 'success' : 'default'} /> },
+            { label: 'Date Added', value: new Date(details.dateadded).toLocaleString() },
+            { label: 'Total Opened', value: details.totalopened?.toLocaleString() },
+            { label: 'Total Clicks', value: details.totalclicked?.toLocaleString() },
+        ];
+        
+        return (
+            <div className="contact-details-grid">
+                {detailItems.map(({label, value}) => value ? (
+                    <React.Fragment key={label}>
+                        <dt>{label}</dt>
+                        <dd>{value}</dd>
+                    </React.Fragment>
+                ) : null)}
             </div>
-             <div className="card-grid list-grid" style={{ gridTemplateColumns: '1fr' }}>
-                {!campaigns || campaigns.length === 0 ? (
-                    <p>No campaigns found.</p>
-                ) : (
-                    campaigns.map((campaign) => {
-                        const status = statusMap[campaign.Status] || { text: 'Unknown', className: 'badge-default' };
-                        return (
-                            <div key={campaign.Name} className="list-card">
-                                <div className="list-card-header">
-                                    <h3>{campaign.Name}</h3>
-                                </div>
-                                <div className="list-card-body">
-                                    <div className="list-card-stat">
-                                        <span>Recipients</span>
-                                        <strong>{campaign.Recipients?.toLocaleString() || 0}</strong>
-                                    </div>
-                                    <div className="list-card-stat">
-                                        <span>Sent</span>
-                                        <strong>{campaign.Sent?.toLocaleString() || 0}</strong>
-                                    </div>
-                                    <div className="list-card-stat">
-                                        <span>Opened</span>
-                                        <strong>{campaign.Opened?.toLocaleString() || 0}</strong>
-                                    </div>
-                                    <div className="list-card-stat">
-                                        <span>Clicked</span>
-                                        <strong>{campaign.Clicked?.toLocaleString() || 0}</strong>
-                                    </div>
-                                </div>
-                                <div className="list-card-footer">
-                                    <span>Status</span>
-                                    <span className={`badge ${status.className}`}>{status.text}</span>
-                                </div>
-                            </div>
-                        );
-                    })
-                )}
-            </div>
-        </div>
-    );
-};
-
-const DomainsView = ({ apiKey }: { apiKey: string }) => {
-    const { data: domains, loading, error, refetch } = useApiV4<any[]>('/domains', apiKey);
-    const [expandedDomain, setExpandedDomain] = useState<string | null>(null);
-
-    const toggleExpand = (domainName: string) => {
-        setExpandedDomain(expandedDomain === domainName ? null : domainName);
+        );
     };
 
-    if (loading) return <CenteredLoader />;
-    if (error) return <ErrorMessage message={error} />;
+    return (
+        <>
+            <ActionStatus status={actionStatus} />
+            <div className="contacts-header">
+                <div className="search-bar">
+                    <input
+                        type="text"
+                        placeholder="Search contacts..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <button className="btn btn-primary" onClick={() => setAddModalOpen(true)}>
+                    <Icon path={ICONS.USER_PLUS} />
+                    <span>Add Contact</span>
+                </button>
+            </div>
+            
+            {loading ? <CenteredMessage><Loader /></CenteredMessage> :
+             error ? <ErrorMessage error={error} /> :
+             !contacts || contacts.length === 0 ? <CenteredMessage>No contacts found.</CenteredMessage> : (
+                <>
+                    <div className="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Status</th>
+                                    <th>Date Added</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {contacts.map(contact => (
+                                    <tr key={contact.publiccontactid}>
+                                        <td>{contact.email}</td>
+                                        <td>{contact.firstname || '-'}</td>
+                                        <td>{contact.lastname || '-'}</td>
+                                        <td><Badge text={String(contact.status || 'N/A')} type={String(contact.status || '').toLowerCase() === 'active' ? 'success' : 'default'} /></td>
+                                        <td>{new Date(contact.dateadded).toLocaleDateString()}</td>
+                                        <td>
+                                            <button className="btn-icon" title="View Details" onClick={() => handleViewContact(contact.email)}>
+                                                <Icon path={ICONS.EYE} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div className="pagination-controls">
+                        <button onClick={() => setOffset(o => Math.max(0, o - limit))} disabled={offset === 0}>
+                            Previous
+                        </button>
+                        <span>Page {offset / limit + 1}</span>
+                        <button onClick={() => setOffset(o => o + limit)} disabled={contacts.length < limit}>
+                            Next
+                        </button>
+                    </div>
+                </>
+            )}
+
+            <Modal isOpen={isAddModalOpen} onClose={() => { setAddModalOpen(false); setActionStatus({type:null, message:''})}} title="Add New Contact">
+                <form onSubmit={handleAddContact} className="modal-form">
+                    <div className="form-group">
+                        <label htmlFor="email">Email Address</label>
+                        <input type="email" id="email" name="email" required />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="firstname">First Name</label>
+                        <input type="text" id="firstname" name="firstname" />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="lastname">Last Name</label>
+                        <input type="text" id="lastname" name="lastname" />
+                    </div>
+                    <button type="submit" className="btn btn-primary full-width">Save Contact</button>
+                    {actionStatus.type === 'error' && <ActionStatus status={actionStatus} />}
+                </form>
+            </Modal>
+
+            <Modal isOpen={!!viewedContactEmail} onClose={() => { setViewedContactEmail(null); setViewedContactDetails(null); }} title="Contact Details">
+                {isViewModalLoading ? <CenteredMessage><Loader /></CenteredMessage> : <ContactDetails details={viewedContactDetails} />}
+            </Modal>
+        </>
+    );
+};
+
+const ListContactsViewer = ({ apiKey, listName }) => {
+    const { data: contacts, loading, error } = useApiV4(`/lists/${listName}/contacts`, apiKey);
+
+    if (loading) return <CenteredMessage><Loader /></CenteredMessage>;
+    if (error) return <ErrorMessage error={{...error, endpoint: `lists/${listName}/contacts`}} />;
+    if (!contacts || !Array.isArray(contacts) || contacts.length === 0) return <CenteredMessage>No contacts found in this list.</CenteredMessage>;
 
     return (
-        <div>
-            <div className="content-header">
-                <h2>Domains</h2>
-                <p>Manage your sending domains and verify their DNS records.</p>
-            </div>
-             <div className="card-grid domain-grid">
-                {domains && domains.map(domain => {
-                    const domainName = domain.Domain; // Safe access
-                    if (!domainName) return null;
-
-                    const isExpanded = expandedDomain === domainName;
-                    return (
-                        <div key={domainName} className="card domain-card">
-                             <div className="domain-card-header">
-                                <h3>{domainName}</h3>
-                                <div className="action-buttons">
-                                    <button className="btn-icon" onClick={() => {}}><Icon path={ICONS.DELETE} /></button>
-                                    <button className="btn" onClick={() => {}}>Verify</button>
-                                </div>
-                            </div>
-                            <div className="domain-card-body">
-                                <div className="domain-card-statuses">
-                                    <div><span>SPF</span> <span className={`badge ${domain.Spf ? 'badge-success':'badge-danger'}`}>{domain.Spf ? 'Verified':'Unverified'}</span></div>
-                                    <div><span>DKIM</span><span className={`badge ${domain.Dkim ? 'badge-success':'badge-danger'}`}>{domain.Dkim ? 'Verified':'Unverified'}</span></div>
-                                    <div><span>Tracking</span><span className={`badge ${domain.Tracking ? 'badge-success':'badge-danger'}`}>{domain.Tracking ? 'Verified':'Unverified'}</span></div>
-                                    <div><span>MX</span><span className={`badge ${domain.Mx ? 'badge-success':'badge-danger'}`}>{domain.Mx ? 'Verified':'Unverified'}</span></div>
-                                </div>
-                            </div>
-                             <div className="domain-card-footer" onClick={() => toggleExpand(domainName)}>
-                                <span>DNS Records</span>
-                                <Icon path={ICONS.CHEVRON_DOWN} className={isExpanded ? 'expanded' : ''}/>
-                            </div>
-                            {isExpanded && (
-                                <div className="domain-card-expanded-content">
-                                    <p>Add these records to your domain's DNS settings.</p>
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
+        <div className="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {contacts.map(contact => (
+                        <tr key={contact.Email}>
+                            <td>{contact.Email}</td>
+                            <td>{contact.FirstName || '-'}</td>
+                            <td>{contact.LastName || '-'}</td>
+                            <td><Badge text={contact.Status} type={contact.Status === 'Active' ? 'success' : 'default'} /></td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 };
 
-const EmailListView = ({ apiKey }: { apiKey: string }) => {
-    const { data: lists, loading, error, refetch } = useApiV4<any[]>('/lists', apiKey);
+const EmailListView = ({ apiKey }) => {
+    const [refetchIndex, setRefetchIndex] = useState(0);
+    const { data: lists, loading: loadingLists, error: errorLists } = useApiV4('/lists', apiKey, {}, refetchIndex);
+    const [actionStatus, setActionStatus] = useState({ type: null, message: '' });
     const [newListName, setNewListName] = useState('');
-    const [actionStatus, setActionStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
     const [isCreating, setIsCreating] = useState(false);
-    
-    // New state for modal
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedList, setSelectedList] = useState<string | null>(null);
+    const [viewedList, setViewedList] = useState(null);
 
+    const refetchLists = () => setRefetchIndex(prev => prev + 1);
 
-    const handleCreateList = async (e: React.FormEvent) => {
+    const handleCreateList = async (e) => {
         e.preventDefault();
         if (!newListName) return;
 
         setIsCreating(true);
-        setActionStatus(null);
+        setActionStatus({ type: null, message: '' });
+
         try {
             await apiFetchV4('/lists', apiKey, {
                 method: 'POST',
-                body: JSON.stringify({ ListName: newListName, AllowUnsubscribe: true }),
+                body: { ListName: newListName, AllowUnsubscribe: true }
             });
-            setActionStatus({ type: 'success', message: `List "${newListName}" created successfully!` });
+            setActionStatus({ type: 'success', message: `List "${newListName}" created successfully.` });
             setNewListName('');
-            refetch();
-        } catch (err: any) {
+            refetchLists();
+        } catch (err) {
             setActionStatus({ type: 'error', message: `Failed to create list: ${err.message}` });
         } finally {
             setIsCreating(false);
         }
     };
-    
-    const handleViewContacts = (listName: string) => {
-        setSelectedList(listName);
-        setIsModalOpen(true);
-    };
 
-    if (loading) return <CenteredLoader />;
-    if (error) return <ErrorMessage message={error} />;
-
-    return (
-        <div>
-            <div className="content-header">
-                <h2>Email Lists</h2>
-                <p>Manage your contact lists.</p>
-            </div>
-            
-            <div className="view-header">
-                <h3>Create New List</h3>
-            </div>
-            <form onSubmit={handleCreateList} className="create-list-form">
-                <input
-                    type="text"
-                    value={newListName}
-                    onChange={(e) => setNewListName(e.target.value)}
-                    placeholder="Enter new list name"
-                    disabled={isCreating}
-                />
-                <button type="submit" className="btn btn-primary" disabled={isCreating || !newListName}>
-                    {isCreating ? 'Creating...' : 'Create List'}
-                </button>
-            </form>
-             {actionStatus && (
-                <div className={`action-status ${actionStatus.type}`}>
-                    {actionStatus.message}
-                </div>
-            )}
-            
-            <div className="card-grid list-grid" style={{marginTop: '2rem'}}>
-                {!lists || lists.length === 0 ? (
-                    <p>No lists found.</p>
-                ) : (
-                    lists.map((list) => (
-                        <div key={list.ListName} className="card list-card clickable" onClick={() => handleViewContacts(list.ListName)}>
-                           <div className="list-card-header">
-                                <h3>{list.ListName}</h3>
-                           </div>
-                           <div className="list-card-body">
-                               <div className="list-card-stat">
-                                   <span>Contacts</span>
-                                   <strong>{list.ContactsCount.toLocaleString()}</strong>
-                               </div>
-                           </div>
-                           <div className="list-card-footer">
-                                <span>Created</span>
-                                <span>{new Date(list.DateAdded).toLocaleDateString()}</span>
-                           </div>
-                        </div>
-                    ))
-                )}
-            </div>
-            {selectedList && (
-                <ListContactsViewer 
-                    apiKey={apiKey} 
-                    listName={selectedList} 
-                    isOpen={isModalOpen}
-                    onClose={() => {
-                        setIsModalOpen(false);
-                        setSelectedList(null);
-                    }} 
-                />
-            )}
-        </div>
+    const BoolBadge = ({ value }) => (
+        <Badge text={value ? 'Yes' : 'No'} type={value ? 'success' : 'default'} />
     );
-};
-
-const ListContactsViewer = ({ apiKey, listName, isOpen, onClose }: { apiKey: string, listName: string, isOpen: boolean, onClose: () => void }) => {
-    const { data: contacts, loading, error } = useApiV4<any[]>(`/lists/${listName}/contacts`, apiKey, { method: 'GET' });
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={`Contacts in "${listName}"`}>
-            {loading && <CenteredLoader />}
-            {error && <ErrorMessage message={error} />}
-            {contacts && (
-                <div className="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Email</th>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {contacts.length === 0 ? (
-                                <tr>
-                                    <td colSpan={4} style={{ textAlign: 'center' }}>No contacts found in this list.</td>
-                                </tr>
-                            ) : (
-                                contacts.map(contact => (
-                                    <tr key={contact.Email}>
-                                        <td>{contact.Email}</td>
-                                        <td>{contact.FirstName}</td>
-                                        <td>{contact.LastName}</td>
-                                        <td><span className={`badge ${contact.Status === 'Active' ? 'badge-success' : 'badge-default'}`}>{contact.Status}</span></td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-        </Modal>
-    );
-};
-
-const ContactsView = ({ apiKey }: { apiKey: string }) => {
-    // This is a placeholder as per the original file. Full implementation can be added.
-    const [modalAction, setModalAction] = useState<'add' | 'view' | null>(null);
-    const [selectedContact, setSelectedContact] = useState<any>(null);
-    const [actionStatus, setActionStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-
-    const { data: contacts, loading, error, refetch } = useApiV4<any[]>('/contacts', apiKey);
-
-    const handleAddContact = async (formData: any) => {
-        setActionStatus(null);
-        try {
-            await apiFetchV4('/contacts', apiKey, {
-                method: 'POST',
-                body: JSON.stringify({
-                    Email: formData.Email,
-                    FirstName: formData.FirstName,
-                    LastName: formData.LastName,
-                }),
-            });
-            setActionStatus({ type: 'success', message: 'Contact added successfully!' });
-            setModalAction(null);
-            refetch();
-        } catch (err: any) {
-            setActionStatus({ type: 'error', message: `Failed to add contact: ${err.message}` });
-            // Don't close modal on error
-        }
-    };
-    
-    return (
-        <div>
-            <div className="content-header">
-                <h2>Contacts</h2>
-                <p>Manage all your contacts.</p>
-            </div>
-             <div className="view-header">
-                 <div className="search-bar">
-                    <input type="text" placeholder="Search contacts..." />
-                </div>
-                <button className="btn btn-primary" onClick={() => setModalAction('add')}>
-                    <Icon path={ICONS.USER_PLUS} /> Add Contact
-                </button>
-            </div>
-            
-            {loading && <CenteredLoader />}
-            {error && <ErrorMessage message={error} />}
-            
-            <div className="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Email</th>
-                            <th>Name</th>
-                            <th>Status</th>
-                            <th>Date Added</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {contacts && contacts.map(contact => (
-                            <tr key={contact.Email}>
-                                <td>{contact.Email}</td>
-                                <td>{contact.FirstName} {contact.LastName}</td>
-                                <td>{contact.Status}</td>
-                                <td>{new Date(contact.DateAdded).toLocaleDateString()}</td>
-                                <td>
-                                    <button className="btn-icon" onClick={() => { setSelectedContact(contact); setModalAction('view'); }}>
-                                        <Icon path={ICONS.EYE} />
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-            
-            {modalAction === 'add' && (
-                <AddContactModal 
-                    onClose={() => setModalAction(null)} 
-                    onSubmit={handleAddContact}
-                    actionStatus={actionStatus}
-                />
-            )}
-            {modalAction === 'view' && selectedContact && (
-                <ViewContactModal 
-                    contact={selectedContact}
-                    onClose={() => { setModalAction(null); setSelectedContact(null); }}
-                />
-            )}
-        </div>
-    );
-};
-
-const AddContactModal = ({ onClose, onSubmit, actionStatus }: { onClose: () => void, onSubmit: (data: any) => Promise<void>, actionStatus: any }) => {
-    const [formData, setFormData] = useState({ Email: '', FirstName: '', LastName: '' });
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        await onSubmit(formData);
-        setIsSubmitting(false);
-    };
-
-    return (
-        <Modal isOpen={true} onClose={onClose} title="Add New Contact">
-            <form onSubmit={handleSubmit} className="modal-form">
-                <div className="form-group">
-                    <label>Email Address</label>
-                    <input type="email" name="Email" value={formData.Email} onChange={handleChange} required />
-                </div>
-                <div className="form-group">
-                    <label>First Name</label>
-                    <input type="text" name="FirstName" value={formData.FirstName} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                    <label>Last Name</label>
-                    <input type="text" name="LastName" value={formData.LastName} onChange={handleChange} />
-                </div>
-                {actionStatus && actionStatus.type === 'error' && (
-                    <div className="action-status error">{actionStatus.message}</div>
-                )}
-                <button type="submit" className="btn btn-primary full-width" disabled={isSubmitting}>
-                    {isSubmitting ? 'Adding...' : 'Add Contact'}
-                </button>
-            </form>
-        </Modal>
-    );
-};
-
-const ViewContactModal = ({ contact, onClose }: { contact: any, onClose: () => void }) => {
-    return (
-        <Modal isOpen={true} onClose={onClose} title="Contact Details">
-            <div className="contact-details-grid">
-                <dt>Email</dt><dd>{contact.Email}</dd>
-                <dt>Name</dt><dd>{contact.FirstName} {contact.LastName}</dd>
-                <dt>Status</dt><dd>{contact.Status}</dd>
-                <dt>Date Added</dt><dd>{new Date(contact.DateAdded).toLocaleString()}</dd>
-            </div>
-        </Modal>
-    );
-};
-
-const SegmentsView = ({ apiKey }: { apiKey: string }) => {
-    // This is a placeholder as per the original file. Full implementation can be added.
-    return (
-        <div>
-            <div className="content-header">
-                <h2>Segments</h2>
-                <p>This feature is not yet implemented.</p>
-            </div>
-        </div>
-    );
-};
-
-const SmtpView = ({ apiKey }: { apiKey: string }) => {
-    // This is a placeholder as per the original file. Full implementation can be added.
-    return (
-        <div>
-            <div className="content-header">
-                <h2>SMTP Credentials</h2>
-                <p>This feature is not yet implemented.</p>
-            </div>
-        </div>
-    );
-};
-
-const ApiKeysView = ({ apiKey }: { apiKey: string }) => {
-    const { data: apiKeys, loading, error, refetch } = useApiV4<any[]>('/security/apikeys', apiKey);
-    const [modalAction, setModalAction] = useState<'add' | 'edit' | null>(null);
-    const [selectedKey, setSelectedKey] = useState<any>(null);
-    const [actionStatus, setActionStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-    const [newSecret, setNewSecret] = useState<string | null>(null);
-    
-    const handleModalOpen = (action: 'add' | 'edit', apiKeyData: any = null) => {
-        setActionStatus(null);
-        setSelectedKey(apiKeyData);
-        setModalAction(action);
-    };
-
-    const handleModalClose = () => {
-        setModalAction(null);
-        setSelectedKey(null);
-    };
-
-    const handleSubmit = async (formData: any) => {
-        setActionStatus(null);
-        const isEditing = modalAction === 'edit';
-        const endpoint = isEditing ? `/security/apikeys/${selectedKey.AccessKey}` : '/security/apikeys';
-        const method = isEditing ? 'PUT' : 'POST';
-
-        const payload: any = {
-            Name: formData.Name,
-            AccessLevel: formData.AccessLevel,
-        };
-
-        if (formData.Expires) {
-            payload.Expires = new Date(formData.Expires).toISOString();
-        }
-
-        try {
-            const result = await apiFetchV4(endpoint, apiKey, {
-                method,
-                body: JSON.stringify(payload)
-            });
-            setActionStatus({ type: 'success', message: `API Key ${isEditing ? 'updated' : 'created'} successfully!`});
-            if (!isEditing && result.AccessKey) {
-                setNewSecret(result.AccessKey);
-            }
-            handleModalClose();
-            refetch();
-        } catch (err: any) {
-             setActionStatus({ type: 'error', message: `Operation failed: ${err.message}` });
-        }
-    };
-    
-    const handleDelete = async (accessKey: string) => {
-        if (!window.confirm("Are you sure you want to delete this API key? This action cannot be undone.")) {
-            return;
-        }
-        setActionStatus(null);
-        try {
-            await apiFetchV4(`/security/apikeys/${accessKey}`, apiKey, { method: 'DELETE' });
-            setActionStatus({ type: 'success', message: 'API Key deleted successfully.' });
-            refetch();
-        } catch (err: any) {
-            setActionStatus({ type: 'error', message: `Failed to delete key: ${err.message}` });
-        }
-    };
-
-    if (loading) return <CenteredLoader />;
-
-    return (
-        <div>
-            {newSecret && <SecretViewer secretType="API Key" secret={newSecret} onDone={() => setNewSecret(null)} />}
-            <div className="view-header">
-                <h2>API Keys</h2>
-                <button className="btn btn-primary" onClick={() => handleModalOpen('add')}>
-                    <Icon path={ICONS.PLUS} /> Add API Key
-                </button>
-            </div>
-             {actionStatus && <div className={`action-status ${actionStatus.type}`}>{actionStatus.message}</div>}
-
-            {error && (
-                <ErrorMessage message={error}>
-                    {error.includes("Account not found") && (
-                        <small><strong>Hint:</strong> Your master API key might be missing the required permissions (e.g., `View/Security`, `Modify/Security`). Please check its access level.</small>
-                    )}
-                </ErrorMessage>
-            )}
-
-            <div className="card-grid smtp-grid">
-                {apiKeys && Array.isArray(apiKeys) && apiKeys.map(key => (
-                    <div key={key.AccessKey} className="card apikey-card">
-                        <div className="smtp-card-header">
-                            <h3>{key.Name}</h3>
-                            <div className="action-buttons">
-                                <button className="btn-icon" onClick={() => handleModalOpen('edit', key)}><Icon path={ICONS.EDIT} /></button>
-                                <button className="btn-icon btn-icon-danger" onClick={() => handleDelete(key.AccessKey)}><Icon path={ICONS.DELETE} /></button>
-                            </div>
-                        </div>
-                         <div className="apikey-card-body">
-                            <div className="smtp-detail-item">
-                                <span>Access Key</span>
-                                <strong className="monospace">{key.AccessKey.slice(0, 4)}...{key.AccessKey.slice(-4)}</strong>
-                            </div>
-                            <div className="smtp-detail-item">
-                                <span>Expires</span>
-                                <strong>{key.Expires ? new Date(key.Expires).toLocaleDateString() : 'Never'}</strong>
-                            </div>
-                            <div className="smtp-detail-item full-span">
-                                <span>Permissions</span>
-                                <div className="permissions-display">
-                                    {key.AccessLevel.map((p: string) => <span key={p} className="badge badge-default">{p}</span>)}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-                {apiKeys && apiKeys.length === 0 && <p>No API keys found.</p>}
-            </div>
-
-            {modalAction && (
-                <ApiKeyModal
-                    isOpen={!!modalAction}
-                    onClose={handleModalClose}
-                    onSubmit={handleSubmit}
-                    apiKeyData={selectedKey}
-                    actionStatus={actionStatus}
-                />
-            )}
-        </div>
-    );
-};
-
-const ApiKeyModal = ({ isOpen, onClose, onSubmit, apiKeyData, actionStatus }: { isOpen: boolean, onClose: () => void, onSubmit: (data: any) => Promise<void>, apiKeyData: any, actionStatus: any }) => {
-    const [name, setName] = useState('');
-    const [expires, setExpires] = useState('');
-    const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    
-    const PERMISSIONS = {
-        Account: ['View Account', 'Modify Account', 'Modify Contacts', 'Modify Files', 'Modify-templates'],
-        Security: ['View Security', 'Modify Security', 'Modify Smtp'],
-        Sending: ['Send Http', 'Send Smtp'],
-        Email: ['View Email', 'Modify Email'],
-        Campaigns: ['View Campaigns', 'Modify Campaigns'],
-        Channels: ['View Channels', 'Modify Channels'],
-        Contacts: ['View Contacts', 'Modify Contacts'],
-        Lists: ['View Lists', 'Modify Lists'],
-        Segments: ['View Segments', 'Modify Segments'],
-        Subaccounts: ['View Subaccounts', 'Modify Subaccounts', 'Manage Subaccounts'],
-        Reports: ['View Reports'],
-        Settings: ['Modify Settings']
-    };
-
-    useEffect(() => {
-        if (apiKeyData) {
-            setName(apiKeyData.Name || '');
-            setExpires(apiKeyData.Expires ? apiKeyData.Expires.split('T')[0] : '');
-            setSelectedPermissions(apiKeyData.AccessLevel || []);
-        } else {
-            setName('');
-            setExpires('');
-            setSelectedPermissions([]);
-        }
-    }, [apiKeyData]);
-    
-    const handlePermissionChange = (permission: string) => {
-        setSelectedPermissions(prev => 
-            prev.includes(permission) 
-            ? prev.filter(p => p !== permission)
-            : [...prev, permission]
-        );
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        await onSubmit({ Name: name, Expires: expires, AccessLevel: selectedPermissions });
-        setIsSubmitting(false);
-    };
-
-    return (
-        <Modal isOpen={isOpen} onClose={onClose} title={apiKeyData ? 'Edit API Key' : 'Create API Key'}>
-            <form onSubmit={handleSubmit} className="modal-form">
-                 <div className="form-group">
-                    <label>Name</label>
-                    <input type="text" value={name} onChange={e => setName(e.target.value)} required />
-                </div>
-                 <div className="form-group">
-                    <label>Expires (optional)</label>
-                    <input type="date" value={expires} onChange={e => setExpires(e.target.value)} />
-                </div>
-                <div className="form-group">
-                    <label>Permissions</label>
-                    <div className="permissions-grid">
-                        {Object.entries(PERMISSIONS).map(([group, permissions]) => (
-                            <div key={group} className="permission-group">
-                                <h4>{group}</h4>
-                                {permissions.map(perm => (
-                                    <label key={perm} className="permission-item">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={selectedPermissions.includes(perm)}
-                                            onChange={() => handlePermissionChange(perm)}
-                                        />
-                                        <span>{perm.replace(/[-]/g, ' ')}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                {actionStatus && actionStatus.type === 'error' && <div className="action-status error">{actionStatus.message}</div>}
-                <button type="submit" className="btn btn-primary full-width" disabled={isSubmitting}>
-                    {isSubmitting ? (apiKeyData ? 'Saving...' : 'Creating...') : (apiKeyData ? 'Save Changes' : 'Create API Key')}
-                </button>
-            </form>
-        </Modal>
-    );
-};
-
-
-// --- Main App Component ---
-const App = () => {
-    const [apiKey, setApiKey] = useState<string | null>(() => localStorage.getItem('elasticemail_apikey'));
-    const [activeView, setActiveView] = useState('Statistics');
-    
-    const handleLogin = (key: string) => {
-        localStorage.setItem('elasticemail_apikey', key);
-        setApiKey(key);
-    };
-    
-    const handleLogout = () => {
-        localStorage.removeItem('elasticemail_apikey');
-        setApiKey(null);
-    };
-
-    if (!apiKey) {
-        return <AuthPage onLogin={handleLogin} />;
-    }
-
-    const navItems = [
-        { id: 'Statistics', label: 'Statistics', icon: ICONS.STATISTICS },
-        { id: 'Account', label: 'Account', icon: ICONS.ACCOUNT },
-        { id: 'SendEmail', label: 'Send Email', icon: ICONS.SEND },
-        { id: 'Campaigns', label: 'Campaigns', icon: ICONS.CAMPAIGNS },
-        { id: 'Domains', label: 'Domains', icon: ICONS.GLOBE },
-        { id: 'EmailLists', label: 'Email Lists', icon: ICONS.EMAIL_LIST },
-        { id: 'Contacts', label: 'Contacts', icon: ICONS.CONTACTS },
-        { id: 'Segments', label: 'Segments', icon: ICONS.PUZZLE },
-        { id: 'Smtp', label: 'SMTP', icon: ICONS.SMTP },
-        { id: 'ApiKeys', label: 'API Keys', icon: ICONS.API },
-    ];
-    
-    const views: { [key: string]: ReactNode } = {
-        Statistics: <StatisticsView apiKey={apiKey} />,
-        Account: <AccountView apiKey={apiKey} />,
-        SendEmail: <SendEmailView apiKey={apiKey} />,
-        Campaigns: <CampaignsView apiKey={apiKey} />,
-        Domains: <DomainsView apiKey={apiKey} />,
-        EmailLists: <EmailListView apiKey={apiKey} />,
-        Contacts: <ContactsView apiKey={apiKey} />,
-        Segments: <SegmentsView apiKey={apiKey} />,
-        Smtp: <SmtpView apiKey={apiKey} />,
-        ApiKeys: <ApiKeysView apiKey={apiKey} />,
-    };
-
-    return (
-        <div className="app-layout">
-            <nav className="sidebar">
-                <div>
-                    <h1 className="sidebar-header logo-font">MegaMail</h1>
-                    <div className="nav">
-                        {navItems.map(item => (
-                            <button
-                                key={item.id}
-                                className={`nav-btn ${activeView === item.id ? 'active' : ''}`}
-                                onClick={() => setActiveView(item.id)}
-                            >
-                                <Icon path={item.icon} />
-                                {item.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-                <button className="nav-btn logout-btn" onClick={handleLogout}>
-                    <Icon path={ICONS.LOG_OUT} />
-                    Logout
-                </button>
-            </nav>
-            <main className="content">
-                {views[activeView]}
-            </main>
-        </div>
-    );
-};
-
-const AuthPage = ({ onLogin }: { onLogin: (apiKey: string) => void }) => {
-    const [key, setKey] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [isKeyVisible, setIsKeyVisible] = useState(false);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-        try {
-            // Test API key by fetching account info
-            await apiFetch('/account/load', key);
-            onLogin(key);
-        } catch (err: any) {
-            setError('Invalid API Key. Please check and try again.');
-        }
-        setLoading(false);
-    };
-
-    return (
-        <div className="auth-container">
-            <div className="auth-box">
-                <h1 className="logo-font">MegaMail</h1>
-                <p>Enter your Elastic Email API Key to continue</p>
-                <form onSubmit={handleSubmit} className="auth-form">
-                    <div className="input-group">
-                        <input
-                            type={isKeyVisible ? 'text' : 'password'}
-                            value={key}
-                            onChange={(e) => setKey(e.target.value)}
-                            placeholder="Your API Key"
-                            required
-                        />
-                         <button type="button" className="input-icon-btn" onClick={() => setIsKeyVisible(!isKeyVisible)}>
-                            <Icon path={isKeyVisible ? ICONS.EYE : ICONS.UNLOCK} />
-                        </button>
-                    </div>
-                    {error && <p style={{ color: 'red', marginTop: '1rem' }}>{error}</p>}
-                    <button type="submit" className="btn btn-primary" disabled={loading}>
-                        {loading && <Loader />}
-                        {loading ? 'Verifying...' : 'Login'}
+        <>
+            <div className="form-container" style={{ maxWidth: 'none', marginBottom: '2rem' }}>
+                <form onSubmit={handleCreateList} className="create-list-form">
+                    <input
+                        type="text"
+                        value={newListName}
+                        onChange={(e) => setNewListName(e.target.value)}
+                        placeholder="Enter new list name"
+                        disabled={isCreating}
+                        required
+                    />
+                    <button type="submit" className="btn btn-primary" disabled={isCreating || !newListName}>
+                        {isCreating ? 'Creating...' : 'Create List'}
                     </button>
                 </form>
+                <ActionStatus status={actionStatus} />
+            </div>
+
+            {loadingLists && <CenteredMessage><Loader /></CenteredMessage>}
+            {errorLists && <ErrorMessage error={errorLists} />}
+            {!loadingLists && (!lists || !Array.isArray(lists) || lists.length === 0) && (
+                <CenteredMessage>No email lists found. Create one to get started!</CenteredMessage>
+            )}
+            
+            {lists && Array.isArray(lists) && lists.length > 0 && (
+                 <div className="card-grid list-grid">
+                    {lists.map(list => (
+                        <div key={list.ListName} className="card list-card clickable" onClick={() => setViewedList(list.ListName)}>
+                            <div className="list-card-header">
+                                <h3>{list.ListName}</h3>
+                            </div>
+                            <div className="list-card-body">
+                               <div className="list-card-stat">
+                                   <span>Contacts</span>
+                                   <strong>{list.RecipientsCount?.toLocaleString() ?? '0'}</strong>
+                               </div>
+                               <div className="list-card-stat">
+                                   <span>Date Added</span>
+                                   <strong>{new Date(list.DateAdded).toLocaleDateString()}</strong>
+                               </div>
+                            </div>
+                            <div className="list-card-footer">
+                               <span>Allow Unsubscribe</span>
+                               <BoolBadge value={list.AllowUnsubscribe} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+            
+            <Modal isOpen={!!viewedList} onClose={() => setViewedList(null)} title={`Contacts in "${viewedList}"`}>
+                {viewedList && <ListContactsViewer apiKey={apiKey} listName={viewedList} />}
+            </Modal>
+        </>
+    );
+};
+
+const SendEmailView = ({ apiKey }) => {
+    const [formState, setFormState] = useState({ to: '', from: '', subject: '', body: '' });
+    const [isSending, setIsSending] = useState(false);
+    const [sendStatus, setSendStatus] = useState({ type: null, message: '' });
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormState(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formState.to || !formState.from || !formState.subject || !formState.body) {
+            setSendStatus({ type: 'error', message: 'All fields are required.' });
+            return;
+        }
+        setIsSending(true);
+        setSendStatus({ type: null, message: '' });
+
+        const emailParams = {
+            to: formState.to,
+            from: formState.from,
+            subject: formState.subject,
+            bodyText: formState.body,
+        };
+
+        try {
+            const result = await apiFetch('/email/send', apiKey, {
+                method: 'POST',
+                params: emailParams,
+            });
+            setSendStatus({ type: 'success', message: `Email sent! Transaction ID: ${result.transactionid}` });
+            setFormState({ to: '', from: '', subject: '', body: '' });
+        } catch (err) {
+            setSendStatus({ type: 'error', message: `Failed to send email: ${err.message}` });
+        } finally {
+            setIsSending(false);
+        }
+    };
+
+    return (
+        <div className="form-container">
+            <form onSubmit={handleSubmit} noValidate>
+                <div className="form-grid">
+                    <div className="form-group">
+                        <label htmlFor="from">From Email</label>
+                        <input type="email" id="from" name="from" value={formState.from} onChange={handleInputChange} placeholder="sender@example.com" required />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="to">To Email</label>
+                        <input type="email" id="to" name="to" value={formState.to} onChange={handleInputChange} placeholder="recipient@example.com" required />
+                    </div>
+                    <div className="form-group full-width">
+                        <label htmlFor="subject">Subject</label>
+                        <input type="text" id="subject" name="subject" value={formState.subject} onChange={handleInputChange} placeholder="Your email subject" required />
+                    </div>
+                    <div className="form-group full-width">
+                        <label htmlFor="body">Body (Plain Text)</label>
+                        <textarea id="body" name="body" value={formState.body} onChange={handleInputChange} rows={8} placeholder="Compose your email..." required></textarea>
+                    </div>
+                </div>
+                <div className="form-actions">
+                    {sendStatus.message && (
+                        <div className={`send-status-message ${sendStatus.type === 'success' ? 'success' : 'error'}`}>
+                            {sendStatus.message}
+                        </div>
+                    )}
+                    <button type="submit" className="btn btn-primary" disabled={isSending}>
+                        {isSending ? 'Sending...' : 'Send Email'}
+                    </button>
+                </div>
+            </form>
+        </div>
+    );
+};
+
+const CampaignsView = ({ apiKey }) => {
+    const { data, loading, error } = useApi('/campaign/list', apiKey);
+
+    if (loading) return <CenteredMessage><Loader /></CenteredMessage>;
+    if (error) return <ErrorMessage error={error} />;
+    if (!data || data.length === 0) return <CenteredMessage>No campaigns found.</CenteredMessage>;
+
+    const campaignStatusMap = {
+        1: 'Draft',
+        2: 'Sending',
+        3: 'Processing',
+        4: 'Completed',
+        5: 'Cancelled',
+        6: 'Paused'
+    };
+
+    const getCampaignStatusText = (status) => {
+        if (typeof status === 'number') {
+            return campaignStatusMap[status] || `Unknown (${status})`;
+        }
+        return String(status); // It's already a string like "Completed"
+    };
+
+    const getStatusType = (statusText) => {
+        const s = String(statusText || '').toLowerCase();
+        if (s.includes('completed') || s.includes('sending')) return 'success';
+        if (s.includes('draft') || s.includes('paused')) return 'warning';
+        if (s.includes('cancelled')) return 'danger';
+        return 'default';
+    };
+
+    return (
+        <div className="card-grid domain-grid">
+            {data.map((campaign, index) => {
+                const statusText = getCampaignStatusText(campaign.status);
+                return (
+                    <div key={campaign.campaignid || index} className="card list-card">
+                        <div className="list-card-header">
+                            <h3>{campaign.name}</h3>
+                        </div>
+                        <div className="list-card-body">
+                           <div className="list-card-stat">
+                               <span>Recipients</span>
+                               <strong>{campaign.recipientcount?.toLocaleString() ?? '0'}</strong>
+                           </div>
+                           <div className="list-card-stat">
+                               <span>Date Added</span>
+                               <strong>{new Date(campaign.dateadded).toLocaleDateString()}</strong>
+                           </div>
+                        </div>
+                        <div className="list-card-footer">
+                            <span>Status</span>
+                            <Badge text={statusText} type={getStatusType(statusText)} />
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
+const DomainsView = ({ apiKey }) => {
+    const [refetchIndex, setRefetchIndex] = useState(0);
+    const { data: domains, loading, error } = useApi('/domain/list', apiKey, {}, refetchIndex);
+    const [actionStatus, setActionStatus] = useState({ type: null, message: '' });
+    const [newDomain, setNewDomain] = useState('');
+    const [actionLoading, setActionLoading] = useState(false);
+    const [expandedDomain, setExpandedDomain] = useState(null);
+
+    const refetchDomains = () => setRefetchIndex(prev => prev + 1);
+    
+    const handleApiAction = async (action, params, successMessage) => {
+        setActionLoading(true);
+        setActionStatus({ type: null, message: '' });
+        try {
+            await apiFetch(`/domain/${action}`, apiKey, { method: 'POST', params });
+            setActionStatus({ type: 'success', message: successMessage });
+            refetchDomains();
+        } catch (err) {
+            setActionStatus({ type: 'error', message: err.message });
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleAddDomain = (e) => {
+        e.preventDefault();
+        if (!newDomain) return;
+        handleApiAction('add', { domain: newDomain }, `Domain "${newDomain}" added successfully.`);
+        setNewDomain('');
+    };
+
+    const handleDelete = (domain) => {
+        if (window.confirm(`Are you sure you want to delete the domain "${domain}"?`)) {
+            handleApiAction('delete', { domain }, `Domain "${domain}" deleted successfully.`);
+        }
+    };
+    
+    const BoolBadge = ({ value }) => <Badge text={value ? 'Verified' : 'Missing'} type={value ? 'success' : 'danger'} />;
+
+    const DnsRecord = ({ label, name, value }: { label: string; name?: string; value: string; }) => (
+        <div className="dns-record">
+            <label>{label}</label>
+            {name && <div className="dns-record-name"><span>Name/Host:</span> {name}</div>}
+            <input type="text" readOnly value={value} onClick={(e: React.MouseEvent<HTMLInputElement>) => e.currentTarget.select()} />
+        </div>
+    );
+
+    return (
+        <>
+            <div className="form-container" style={{ maxWidth: 'none', marginBottom: '2rem' }}>
+                <form onSubmit={handleAddDomain} className="add-domain-form">
+                    <input
+                        type="text"
+                        value={newDomain}
+                        onChange={(e) => setNewDomain(e.target.value)}
+                        placeholder="example.com"
+                        disabled={actionLoading}
+                    />
+                    <button type="submit" className="btn btn-primary" disabled={actionLoading || !newDomain}>
+                        {actionLoading ? 'Adding...' : 'Add Domain'}
+                    </button>
+                </form>
+                <ActionStatus status={actionStatus} />
+            </div>
+
+            {loading && !domains && <CenteredMessage><Loader /></CenteredMessage>}
+            {error && <ErrorMessage error={error} />}
+            {domains && (
+                <div className="card-grid domain-grid">
+                    {domains.length === 0 && (
+                        <div className="card"><CenteredMessage>No domains found. Add one to get started.</CenteredMessage></div>
+                    )}
+                    {domains.map((domain) => {
+                        const domainName = domain.Domain || domain.domain;
+                        if (!domainName) return null;
+
+                        return (
+                            <div key={domainName} className="card domain-card">
+                                <div className="domain-card-header">
+                                    <h3>{domainName}</h3>
+                                    <div className="action-buttons">
+                                        <button className="btn-icon" title="Verify Domain" onClick={() => handleApiAction('verify', { domain: domainName }, 'Verification check initiated.')}>
+                                            <Icon path={ICONS.VERIFY} />
+                                        </button>
+                                        <button className="btn-icon" title="Set as Default" onClick={() => handleApiAction('setdefault', { domain: domainName }, 'Domain set as default.')}>
+                                            <Icon path={ICONS.DEFAULT} />
+                                        </button>
+                                        <button className="btn-icon btn-icon-danger" title="Delete Domain" onClick={() => handleDelete(domainName)}>
+                                            <Icon path={ICONS.DELETE} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="domain-card-body">
+                                    <div className="domain-card-statuses">
+                                        <div><span>Verified</span><BoolBadge value={domain.IsVerified} /></div>
+                                        <div><span>Default</span><BoolBadge value={domain.IsDefault} /></div>
+                                        <div><span>SPF</span><BoolBadge value={domain.IsSpf} /></div>
+                                        <div><span>DKIM</span><BoolBadge value={domain.IsDkim} /></div>
+                                    </div>
+                                </div>
+                                <div className="domain-card-footer" onClick={() => setExpandedDomain(prev => prev === domainName ? null : domainName)}>
+                                    <span>DNS Records</span>
+                                    <Icon path={ICONS.CHEVRON_DOWN} className={expandedDomain === domainName ? 'expanded' : ''} />
+                                </div>
+                                {expandedDomain === domainName && (
+                                    <div className="domain-card-expanded-content">
+                                        <h4 style={{marginBottom: '1rem', fontWeight: 600}}>DNS Records for {domainName}</h4>
+                                        <DnsRecord 
+                                            label="SPF (TXT Record)" 
+                                            value="v=spf1 include:mailzila.com ~all" 
+                                            name={`@ or ${domainName}`}
+                                        />
+                                        <DnsRecord 
+                                            label="DKIM (TXT Record)" 
+                                            value="k=rsa;t=s;p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCbmGbQMzYeMvxwtNQoXN0waGYaciuKx8mtMh5czguT4EZlJXuCt6V+l56mmt3t68FEX5JJ0q4ijG71BGoFRkl87uJi7LrQt1ZZmZCvrEII0YO4mp8sDLXC8g1aUAoi8TJgxq2MJqCaMyj5kAm3Fdy2tzftPCV/lbdiJqmBnWKjtwIDAQAB"
+                                            name="api._domainkey"
+                                        />
+                                        <DnsRecord 
+                                            label="Tracking (CNAME Record)" 
+                                            value="app.mailzila.com"
+                                            name="tracking"
+                                        />
+                                        <DnsRecord 
+                                            label="DMARC (TXT Record)" 
+                                            value="v=DMARC1;p=none;pct=10;aspf=r;adkim=r;"
+                                            name="_dmarc"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+        </>
+    );
+};
+
+// --- Segment Rule Builder ---
+const SEGMENT_FIELDS = {
+    Status: { type: 'enum', options: ['Active', 'Engaged', 'Inactive', 'Bounced', 'Unsubscribed', 'Abuse'] },
+    DateAdded: { type: 'date' },
+    LastClicked: { type: 'date' },
+    LastOpened: { type: 'date' },
+    ConsentDate: { type: 'date' },
+    Source: { type: 'string' },
+    FirstName: { type: 'string' },
+};
+
+const SEGMENT_COMPARISONS = {
+    'string': [{ label: 'is', value: 'EQUALS' }, { label: 'is not', value: 'NOT_EQUALS' }, { label: 'contains', value: 'CONTAINS' }, { label: 'does not contain', value: 'NOT_CONTAINS' }],
+    'enum': [{ label: 'is', value: 'EQUALS' }, { label: 'is not', value: 'NOT_EQUALS' }],
+    'date': [{ label: 'is after', value: 'GREATER' }, { label: 'is before', value: 'LESS' }, { label: 'is on', value: 'EQUALS' }]
+};
+
+const SegmentRuleBuilder = ({ onChange }) => {
+    const [rules, setRules] = useState([{ id: 1, field: 'Status', comparison: 'EQUALS', value: 'Active' }]);
+    const [conjunction, setConjunction] = useState('AND');
+
+    const buildRuleString = useCallback(() => {
+        const ruleStrings = rules.map(rule => {
+            if (!rule.field || !rule.comparison || !rule.value) return null;
+            const fieldType = SEGMENT_FIELDS[rule.field]?.type;
+            const operatorMap = {
+                EQUALS: '=',
+                NOT_EQUALS: '!=',
+                GREATER: '>',
+                LESS: '<',
+                CONTAINS: 'CONTAINS',
+                NOT_CONTAINS: 'NOT_CONTAINS'
+            };
+            const operator = operatorMap[rule.comparison];
+            let value = rule.value;
+
+            if (fieldType === 'date') {
+                 value = `'${new Date(value).toISOString().slice(0, 10)} 00:00:00'`;
+            } else if(fieldType === 'string' || fieldType === 'enum') {
+                value = `'${value.replace(/'/g, "''")}'`; // escape single quotes
+            }
+            return `${rule.field} ${operator} ${value}`;
+        }).filter(Boolean);
+
+        return ruleStrings.join(` ${conjunction} `);
+    }, [rules, conjunction]);
+    
+    useEffect(() => {
+        onChange(buildRuleString());
+    }, [rules, conjunction, buildRuleString, onChange]);
+
+    const handleUpdateRule = (id, part, value) => {
+        setRules(currentRules => currentRules.map(r => {
+            if (r.id !== id) return r;
+            const updatedRule = { ...r, [part]: value };
+            // If field changes, reset comparison and value
+            if (part === 'field') {
+                const newFieldType = SEGMENT_FIELDS[value].type;
+                updatedRule.comparison = SEGMENT_COMPARISONS[newFieldType][0].value;
+                const newFieldOptions = SEGMENT_FIELDS[value].options;
+                updatedRule.value = newFieldOptions ? newFieldOptions[0] : '';
+            }
+            return updatedRule;
+        }));
+    };
+    
+    const handleAddRule = () => {
+        setRules(currentRules => [...currentRules, { id: Date.now(), field: 'Status', comparison: 'EQUALS', value: 'Active' }]);
+    };
+    
+    const handleRemoveRule = (id) => {
+        setRules(currentRules => currentRules.filter(r => r.id !== id));
+    };
+
+    return (
+        <div className="rule-builder">
+            <div className="rule-conjunction-toggle">
+                <span>Match</span>
+                <button type="button" className={conjunction === 'ALL' ? 'active' : ''} onClick={() => setConjunction('AND')}>All</button>
+                <button type="button" className={conjunction === 'ANY' ? 'active' : ''} onClick={() => setConjunction('OR')}>Any</button>
+                <span>of the following:</span>
+            </div>
+            <div className="rule-list">
+                {rules.map((rule, index) => (
+                    <div className="rule-row" key={rule.id}>
+                        <select value={rule.field} onChange={e => handleUpdateRule(rule.id, 'field', e.target.value)}>
+                            {Object.keys(SEGMENT_FIELDS).map(f => <option key={f} value={f}>{f}</option>)}
+                        </select>
+                        <select value={rule.comparison} onChange={e => handleUpdateRule(rule.id, 'comparison', e.target.value)}>
+                            {SEGMENT_COMPARISONS[SEGMENT_FIELDS[rule.field].type].map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                        </select>
+                        {SEGMENT_FIELDS[rule.field].type === 'enum' ? (
+                            <select value={rule.value} onChange={e => handleUpdateRule(rule.id, 'value', e.target.value)}>
+                                {SEGMENT_FIELDS[rule.field].options.map(o => <option key={o} value={o}>{o}</option>)}
+                            </select>
+                        ) : SEGMENT_FIELDS[rule.field].type === 'date' ? (
+                            <input type="date" value={rule.value} onChange={e => handleUpdateRule(rule.id, 'value', e.target.value)} />
+                        ) : (
+                            <input type="text" value={rule.value} onChange={e => handleUpdateRule(rule.id, 'value', e.target.value)} />
+                        )}
+                        <button type="button" className="btn-icon remove-rule-btn" onClick={() => handleRemoveRule(rule.id)} disabled={rules.length <= 1} title="Remove rule">
+                            <Icon path={ICONS.DELETE} />
+                        </button>
+                    </div>
+                ))}
+            </div>
+            <button type="button" className="btn add-rule-btn" onClick={handleAddRule}>
+                <Icon path={ICONS.PLUS} /> Add Condition
+            </button>
+        </div>
+    );
+};
+
+
+const SegmentsView = ({ apiKey }) => {
+    const [refetchIndex, setRefetchIndex] = useState(0);
+    const { data: segments, loading, error } = useApiV4('/segments', apiKey, {}, refetchIndex);
+    const [actionStatus, setActionStatus] = useState({ type: null, message: '' });
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [currentSegment, setCurrentSegment] = useState(null); // for editing
+    const [newSegmentRule, setNewSegmentRule] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const refetchSegments = () => setRefetchIndex(prev => prev + 1);
+
+    const openAddModal = () => {
+        setCurrentSegment(null);
+        setModalOpen(true);
+        setActionStatus({ type: null, message: '' });
+        setNewSegmentRule("Status = 'Active'"); // Default rule
+    };
+
+    const openEditModal = (segment) => {
+        setCurrentSegment(segment);
+        setModalOpen(true);
+        setActionStatus({ type: null, message: '' });
+    };
+    
+    const closeModal = () => {
+        setModalOpen(false);
+        setCurrentSegment(null);
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const name = formData.get('name') as string;
+        const rule = currentSegment ? formData.get('rule') as string : newSegmentRule;
+
+        if (!name || !rule) {
+            setActionStatus({ type: 'error', message: 'Name and a valid Rule are required.' });
+            return;
+        }
+
+        setIsSubmitting(true);
+        setActionStatus({ type: 'loading', message: currentSegment ? 'Updating segment...' : 'Adding segment...' });
+        
+        try {
+            if (currentSegment) { // Update mode
+                await apiFetchV4(`/segments/${currentSegment.Name}`, apiKey, {
+                    method: 'PUT',
+                    body: { Name: name, Rule: rule }
+                });
+                setActionStatus({ type: 'success', message: `Segment "${name}" updated successfully.` });
+            } else { // Add mode
+                await apiFetchV4('/segments', apiKey, {
+                    method: 'POST',
+                    body: { Name: name, Rule: rule }
+                });
+                setActionStatus({ type: 'success', message: `Segment "${name}" added successfully.` });
+            }
+            refetchSegments();
+            closeModal();
+        } catch (err) {
+            setActionStatus({ type: 'error', message: `Operation failed: ${err.message}` });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (segmentName) => {
+        if (window.confirm(`Are you sure you want to delete the segment "${segmentName}"? This cannot be undone.`)) {
+             setActionStatus({ type: 'loading', message: `Deleting segment "${segmentName}"...` });
+            try {
+                await apiFetchV4(`/segments/${segmentName}`, apiKey, { method: 'DELETE' });
+                setActionStatus({ type: 'success', message: `Segment "${segmentName}" deleted.` });
+                refetchSegments();
+            } catch (err) {
+                setActionStatus({ type: 'error', message: `Failed to delete segment: ${err.message}` });
+            }
+        }
+    };
+    
+    return (
+        <>
+            <ActionStatus status={actionStatus} />
+            <div className="view-header">
+                <h3>Manage your contact segments.</h3>
+                <button className="btn btn-primary" onClick={openAddModal}>
+                    <Icon path={ICONS.PUZZLE} /> 
+                    <span>Add Segment</span>
+                </button>
+            </div>
+
+            {loading && <CenteredMessage><Loader /></CenteredMessage>}
+            {error && <ErrorMessage error={error} />}
+            
+            {!loading && segments && (
+                <div className="card-grid domain-grid">
+                    {segments.length === 0 ? (
+                        <CenteredMessage>No segments found. Add one to get started.</CenteredMessage>
+                    ) : (
+                        segments.map(segment => (
+                            <div key={segment.Name} className="card segment-card">
+                                <div className="segment-card-header">
+                                    <h3>{segment.Name}</h3>
+                                    <div className="action-buttons">
+                                        <button className="btn-icon" title="Edit Segment" onClick={() => openEditModal(segment)}>
+                                            <Icon path={ICONS.PENCIL} />
+                                        </button>
+                                        <button className="btn-icon btn-icon-danger" title="Delete Segment" onClick={() => handleDelete(segment.Name)}>
+                                            <Icon path={ICONS.DELETE} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="segment-card-body">
+                                    <p style={{ color: 'var(--subtle-text-color)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Rule:</p>
+                                    <pre className="segment-rule">{segment.Rule}</pre>
+                                </div>
+                                <div className="segment-card-footer">
+                                    <span>Recipients</span>
+                                    <strong>{segment.RecipientsCount?.toLocaleString() ?? '0'}</strong>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            )}
+
+            <Modal isOpen={isModalOpen} onClose={closeModal} title={currentSegment ? 'Edit Segment' : 'Add New Segment'}>
+                 <form onSubmit={handleSubmit} className="modal-form">
+                    <div className="form-group">
+                        <label htmlFor="name">Segment Name</label>
+                        <input type="text" id="name" name="name" defaultValue={currentSegment?.Name} required disabled={!!currentSegment} />
+                        {currentSegment && <small style={{marginTop: '0.25rem', fontSize: '0.8rem', color: 'var(--subtle-text-color)'}}>Segment name cannot be changed after creation.</small>}
+                    </div>
+                    <div className="form-group">
+                        <label>{currentSegment ? 'Rule (SQL-like query)' : 'Define Rule'}</label>
+                        {currentSegment ? (
+                             <textarea id="rule" name="rule" rows={5} defaultValue={currentSegment?.Rule} placeholder="e.g., Status = 'Active' AND ConsentDate > '2023-01-01'" required></textarea>
+                        ) : (
+                            <SegmentRuleBuilder onChange={setNewSegmentRule} />
+                        )}
+                    </div>
+                    <button type="submit" className="btn btn-primary full-width" disabled={isSubmitting}>
+                        {isSubmitting ? 'Saving...' : 'Save Segment'}
+                    </button>
+                    {actionStatus.type === 'error' && <ActionStatus status={actionStatus} />}
+                </form>
+            </Modal>
+        </>
+    );
+};
+
+const CredentialSecretViewer = ({ credential }) => {
+    const [copied, setCopied] = useState(false);
+
+    if (!credential) return null;
+
+    const handleCopy = (text) => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <div>
+            <div className="info-message" style={{textAlign: 'left', maxWidth: 'none', marginBottom: '1.5rem'}}>
+                <strong>Important:</strong>
+                <p>This is the only time your secret will be displayed. Please copy it and store it in a safe place.</p>
+            </div>
+            
+            <div className="secret-display">
+                <label>Name</label>
+                <div className="secret-value">{credential.Name}</div>
+                
+                <label>Access Key</label>
+                <div className="secret-value">{credential.AccessKey}</div>
+
+                <label>Secret</label>
+                <div className="secret-value-wrapper">
+                    <input type="text" readOnly value={credential.Secret} />
+                    <button onClick={() => handleCopy(credential.Secret)} className="btn">
+                        {copied ? 'Copied!' : 'Copy'}
+                    </button>
+                </div>
             </div>
         </div>
     );
 };
 
-const root = createRoot(document.getElementById('root')!);
+const SMTPView = ({ apiKey }) => {
+    const [refetchIndex, setRefetchIndex] = useState(0);
+    const { data: credentials, loading, error } = useApiV4('/security/smtp', apiKey, {}, refetchIndex);
+    const [actionStatus, setActionStatus] = useState({ type: null, message: '' });
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [currentCredential, setCurrentCredential] = useState(null); // for editing
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [newlyCreatedCredential, setNewlyCreatedCredential] = useState(null);
+
+    const refetchSmtp = () => setRefetchIndex(prev => prev + 1);
+
+    const openAddModal = () => {
+        setCurrentCredential(null);
+        setModalOpen(true);
+        setActionStatus({ type: null, message: '' });
+    };
+
+    const openEditModal = (credential) => {
+        setCurrentCredential(credential);
+        setModalOpen(true);
+        setActionStatus({ type: null, message: '' });
+    };
+    
+    const closeModal = () => {
+        setModalOpen(false);
+        setCurrentCredential(null);
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        
+        const body = {
+            Name: formData.get('name') as string,
+            Expires: formData.get('expires') ? new Date(formData.get('expires') as string).toISOString() : null,
+            RestrictAccessToIPRange: (formData.get('ipRestriction') as string).split(',').map(ip => ip.trim()).filter(Boolean)
+        };
+
+        if (!body.Name) {
+            setActionStatus({ type: 'error', message: 'Name is required.' });
+            return;
+        }
+
+        setIsSubmitting(true);
+        setActionStatus({ type: 'loading', message: currentCredential ? 'Updating credential...' : 'Adding credential...' });
+        
+        try {
+            if (currentCredential) { // Update mode
+                await apiFetchV4(`/security/smtp/${currentCredential.AccessKey}`, apiKey, {
+                    method: 'PUT',
+                    body: body
+                });
+                setActionStatus({ type: 'success', message: `Credential "${body.Name}" updated successfully.` });
+            } else { // Add mode
+                const result = await apiFetchV4('/security/smtp', apiKey, {
+                    method: 'POST',
+                    body: body
+                });
+                setNewlyCreatedCredential(result); // Show the secret modal
+                setActionStatus({ type: 'success', message: `Credential "${body.Name}" created successfully.` });
+            }
+            refetchSmtp();
+            closeModal();
+        } catch (err) {
+            setActionStatus({ type: 'error', message: `Operation failed: ${err.message}` });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (credential) => {
+        if (window.confirm(`Are you sure you want to delete the credential "${credential.Name}"? This cannot be undone.`)) {
+             setActionStatus({ type: 'loading', message: `Deleting credential...` });
+            try {
+                await apiFetchV4(`/security/smtp/${credential.AccessKey}`, apiKey, { method: 'DELETE' });
+                setActionStatus({ type: 'success', message: `Credential "${credential.Name}" deleted.` });
+                refetchSmtp();
+            } catch (err) {
+                setActionStatus({ type: 'error', message: `Failed to delete credential: ${err.message}` });
+            }
+        }
+    };
+    
+    const formatDate = (dateStr) => dateStr ? new Date(dateStr).toLocaleDateString() : 'N/A';
+    const maskKey = (key) => key ? `${key.substring(0, 4)}...${key.substring(key.length - 4)}` : 'N/A';
+
+    return (
+        <>
+            <ActionStatus status={actionStatus} />
+            <div className="view-header">
+                <h3>Manage your SMTP credentials.</h3>
+                <button className="btn btn-primary" onClick={openAddModal}>
+                    <Icon path={ICONS.KEY} /> 
+                    <span>Add Credential</span>
+                </button>
+            </div>
+
+            {loading && <CenteredMessage><Loader /></CenteredMessage>}
+            {error && <ErrorMessage error={error} />}
+            
+            {!loading && credentials && (
+                <div className="card-grid smtp-grid">
+                    {credentials.length === 0 ? (
+                        <CenteredMessage>No SMTP credentials found. Add one to get started.</CenteredMessage>
+                    ) : (
+                        credentials.map(cred => (
+                            <div key={cred.AccessKey} className="card smtp-card">
+                                <div className="smtp-card-header">
+                                    <h3>{cred.Name}</h3>
+                                    <div className="action-buttons">
+                                        <button className="btn-icon" title="Edit Credential" onClick={() => openEditModal(cred)}>
+                                            <Icon path={ICONS.PENCIL} />
+                                        </button>
+                                        <button className="btn-icon btn-icon-danger" title="Delete Credential" onClick={() => handleDelete(cred)}>
+                                            <Icon path={ICONS.DELETE} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="smtp-card-body">
+                                    <div className="smtp-detail-item">
+                                        <span>Access Key</span>
+                                        <strong className="monospace">{maskKey(cred.AccessKey)}</strong>
+                                    </div>
+                                    <div className="smtp-detail-item">
+                                        <span>Created</span>
+                                        <strong>{formatDate(cred.DateCreated)}</strong>
+                                    </div>
+                                    <div className="smtp-detail-item">
+                                        <span>Expires</span>
+                                        <strong>{formatDate(cred.Expires)}</strong>
+                                    </div>
+                                    <div className="smtp-detail-item">
+                                        <span>Last Used</span>
+                                        <strong>{formatDate(cred.LastUsed)}</strong>
+                                    </div>
+                                    <div className="smtp-detail-item full-span">
+                                        <span>IP Restriction</span>
+                                        <strong>{cred.RestrictAccessToIPRange?.join(', ') || 'None'}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            )}
+
+            <Modal isOpen={isModalOpen} onClose={closeModal} title={currentCredential ? 'Edit Credential' : 'Add New Credential'}>
+                 <form onSubmit={handleSubmit} className="modal-form">
+                    <div className="form-group">
+                        <label htmlFor="name">Credential Name</label>
+                        <input type="text" id="name" name="name" defaultValue={currentCredential?.Name} required />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="expires">Expires (optional)</label>
+                        <input type="date" id="expires" name="expires" defaultValue={currentCredential?.Expires?.split('T')[0]} />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="ipRestriction">Restrict Access to IPs (comma-separated)</label>
+                        <input type="text" id="ipRestriction" name="ipRestriction" defaultValue={currentCredential?.RestrictAccessToIPRange?.join(', ')} placeholder="e.g. 192.168.1.1, 20.20.0.0/16" />
+                    </div>
+                    <button type="submit" className="btn btn-primary full-width" disabled={isSubmitting}>
+                        {isSubmitting ? 'Saving...' : 'Save Credential'}
+                    </button>
+                    {actionStatus.type === 'error' && <ActionStatus status={actionStatus} />}
+                </form>
+            </Modal>
+
+            <Modal
+                isOpen={!!newlyCreatedCredential}
+                onClose={() => setNewlyCreatedCredential(null)}
+                title="SMTP Credential Created"
+            >
+                <CredentialSecretViewer credential={newlyCreatedCredential} />
+            </Modal>
+        </>
+    );
+};
+
+
+// --- Auth Component ---
+const AuthPage = ({ onLogin }) => {
+  const [apiKey, setApiKey] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (apiKey) {
+      onLogin(apiKey.trim());
+    }
+  };
+
+  return (
+    <div className="auth-container">
+      <div className="auth-box">
+        <h1 className="logo-font">MegaMail</h1>
+        <p>Enter your API Key to view your account data.</p>
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="input-group">
+            <input
+              id="apiKey"
+              type={showApiKey ? 'text' : 'password'}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Your Elastic Email API Key"
+              required
+              autoFocus
+            />
+            <button
+                type="button"
+                className="input-icon-btn"
+                onClick={() => setShowApiKey(!showApiKey)}
+                aria-label={showApiKey ? 'Hide API Key' : 'Show API Key'}
+            >
+                <Icon path={showApiKey ? ICONS.EYE_OFF : ICONS.EYE} />
+            </button>
+          </div>
+          <button type="submit" className="btn btn-primary">Connect Account</button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// --- Main App Component ---
+
+const views = {
+    Statistics: StatisticsView,
+    Account: AccountView,
+    Contacts: ContactsView,
+    "Email List": EmailListView,
+    Segments: SegmentsView,
+    "Send Email": SendEmailView,
+    Campaigns: CampaignsView,
+    Domains: DomainsView,
+    SMTP: SMTPView,
+};
+
+const navItems = [
+    { id: 'Statistics', label: 'Statistics', icon: ICONS.STATS },
+    { id: 'Account', label: 'Account', icon: ICONS.ACCOUNT },
+    { id: 'Contacts', label: 'Contacts', icon: ICONS.CONTACTS },
+    { id: 'Email List', label: 'Email List', icon: ICONS.EMAIL_LIST },
+    { id: 'Segments', label: 'Segments', icon: ICONS.PUZZLE },
+    { id: 'Send Email', label: 'Send Email', icon: ICONS.SEND_EMAIL },
+    { id: 'Campaigns', label: 'Campaigns', icon: ICONS.CAMPAIGNS },
+    { id: 'Domains', label: 'Domains', icon: ICONS.DOMAINS },
+    { id: 'SMTP', label: 'SMTP', icon: ICONS.KEY },
+];
+
+const App = () => {
+  const [apiKey, setApiKey] = useState(localStorage.getItem('elasticEmailApiKey'));
+  const [view, setView] = useState('Statistics');
+
+  const handleLogin = useCallback((key) => {
+    localStorage.setItem('elasticEmailApiKey', key);
+    setApiKey(key);
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('elasticEmailApiKey');
+    setApiKey(null);
+  }, []);
+
+  if (!apiKey) {
+    return <AuthPage onLogin={handleLogin} />;
+  }
+  
+  const CurrentView = views[view];
+
+  return (
+    <div className="app-layout">
+      <nav className="sidebar">
+        <div>
+          <div className="sidebar-header logo-font">MegaMail</div>
+          <div className="nav">
+            {navItems.map(item => (
+              <button
+                key={item.id}
+                className={`nav-btn ${view === item.id ? 'active' : ''}`}
+                onClick={() => setView(item.id)}
+                aria-label={item.label}
+              >
+                <Icon path={item.icon} />
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <button onClick={handleLogout} className="nav-btn logout-btn">
+            <Icon path={ICONS.LOGOUT} />
+            <span>Log Out</span>
+        </button>
+      </nav>
+      <main className="content">
+        <header className="content-header">
+            <h2>{view}</h2>
+            <p>View your latest {view.toLowerCase()} data from the Elastic Email API.</p>
+        </header>
+        <CurrentView apiKey={apiKey} />
+      </main>
+    </div>
+  );
+};
+
+const container = document.getElementById('root');
+const root = createRoot(container);
 root.render(<App />);

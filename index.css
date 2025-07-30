@@ -1143,11 +1143,11 @@ td {
     height: 16px;
 }
 
-/* SMTP View & API Key View */
+/* SMTP View */
 .smtp-grid {
     grid-template-columns: 1fr;
 }
-.smtp-card, .apikey-card {
+.smtp-card {
     padding: 0;
 }
 .smtp-card-header {
@@ -1163,7 +1163,7 @@ td {
     color: var(--primary-color);
     word-break: break-all;
 }
-.smtp-card-body, .apikey-card-body {
+.smtp-card-body {
     padding: 1.5rem;
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1224,52 +1224,6 @@ td {
     margin-top: 0;
     flex-shrink: 0;
     padding: 0.75rem 1.5rem;
-}
-
-/* API Key Specific */
-.permissions-display {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-}
-.permissions-display .badge {
-    text-transform: none;
-    font-size: 0.8rem;
-}
-
-.permissions-grid {
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 1rem;
-    background-color: #F8FAFC;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.5rem;
-}
-.permission-group h4 {
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: var(--subtle-text-color);
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 0.5rem;
-    margin-bottom: 0.75rem;
-}
-.permission-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.875rem;
-    color: var(--text-color);
-    cursor: pointer;
-    text-transform: capitalize;
-}
-.permission-item input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--secondary-color);
 }
 
 
@@ -1341,10 +1295,7 @@ td {
   .rule-row {
     flex-wrap: wrap;
   }
-  .smtp-card-body, .apikey-card-body {
-    grid-template-columns: 1fr;
-  }
-  .permissions-grid {
+  .smtp-card-body {
     grid-template-columns: 1fr;
   }
 }

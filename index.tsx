@@ -30,13 +30,14 @@ const ICONS = {
     KEY: "M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4",
     LOGOUT: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",
     MAIL: "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM22 6l-10 7L2 6",
+    MENU: "M3 12h18M3 6h18M3 18h18",
     PENCIL: "M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z",
     PLUS: "M12 5v14m-7-7h14",
     PRICE_TAG: "M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7H7.01",
     PUZZLE: "M20.5 11H19v-2.14a2.5 2.5 0 0 0-2.5-2.5H14V4.5a2.5 2.5 0 0 0-2.5-2.5h-3A2.5 2.5 0 0 0 6 4.5V6H3.5a2.5 2.5 0 0 0-2.5 2.5V11H2.5a2.5 2.5 0 0 1 0 5H1v2.14a2.5 2.5 0 0 0 2.5 2.5H6V23.5a2.5 2.5 0 0 0 2.5 2.5h3A2.5 2.5 0 0 0 14 23.5V22h2.5a2.5 2.5 0 0 0 2.5-2.5V17h1.5a2.5 2.5 0 0 1 0-5z",
-    SEND_EMAIL: "M22 2L11 13L2 9L22 2z M22 2L15 22L11 13L2 9L22 2z",
+    SEND_EMAIL: "M22 2L11 13L2 9l20-7zM22 2l-7 20-4-9-9-4 20-7z",
     SERVER: "M23 12H1m22-6H1m0 12H1M6 6v12M18 6v12",
-    STATS: "M2.5 2v6h6M2.5 22v-6h6M22 11.5A10.5 10.5 0 0 0 11.5 1 10.5 10.5 0 0 0 1 11.5",
+    STATS: "M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15",
     TRENDING_UP: "M23 6l-9.5 9.5-5-5L1 18",
     USER_PLUS: "M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M8.5 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM20 8v6M23 11h-6",
     VERIFY: "M22 11.08V12a10 10 0 1 1-5.93-9.14",
@@ -1555,6 +1556,7 @@ const navItems = [
 const App = () => {
   const [apiKey, setApiKey] = useState(localStorage.getItem('elasticEmailApiKey'));
   const [view, setView] = useState('Statistics');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogin = useCallback((key) => {
     localStorage.setItem('elasticEmailApiKey', key);
@@ -1564,7 +1566,13 @@ const App = () => {
   const handleLogout = useCallback(() => {
     localStorage.removeItem('elasticEmailApiKey');
     setApiKey(null);
+    setIsMobileMenuOpen(false);
   }, []);
+
+  const handleSetView = (newView: string) => {
+      setView(newView);
+      setIsMobileMenuOpen(false);
+  };
 
   if (!apiKey) {
     return <AuthPage onLogin={handleLogin} />;
@@ -1573,36 +1581,46 @@ const App = () => {
   const CurrentView = views[view];
 
   return (
-    <div className="app-layout">
-      <nav className="sidebar">
-        <div>
-          <div className="sidebar-header logo-font">MegaMail</div>
-          <div className="nav">
-            {navItems.map(item => (
-              <button
-                key={item.id}
-                className={`nav-btn ${view === item.id ? 'active' : ''}`}
-                onClick={() => setView(item.id)}
-                aria-label={item.label}
-              >
-                <Icon path={item.icon} />
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </div>
+    <div className={`app-container ${isMobileMenuOpen ? 'mobile-menu-open' : ''}`}>
+        {isMobileMenuOpen && <div className="mobile-menu-overlay" onClick={() => setIsMobileMenuOpen(false)}></div>}
+        <nav className="sidebar">
+            <div>
+            <div className="sidebar-header logo-font">MegaMail</div>
+            <div className="nav">
+                {navItems.map(item => (
+                <button
+                    key={item.id}
+                    className={`nav-btn ${view === item.id ? 'active' : ''}`}
+                    onClick={() => handleSetView(item.id)}
+                    aria-label={item.label}
+                >
+                    <Icon path={item.icon} />
+                    <span>{item.label}</span>
+                </button>
+                ))}
+            </div>
+            </div>
+            <button onClick={handleLogout} className="nav-btn logout-btn">
+                <Icon path={ICONS.LOGOUT} />
+                <span>Log Out</span>
+            </button>
+        </nav>
+        <div className="main-wrapper">
+            <header className="mobile-header">
+                <button className="mobile-menu-toggle" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label="Toggle menu">
+                    <Icon path={ICONS.MENU} />
+                </button>
+                <div className="mobile-header-title">{view}</div>
+                <div className="mobile-header-placeholder"></div>
+            </header>
+            <main className="content">
+                <header className="content-header">
+                    <h2>{view}</h2>
+                    <p>View your latest {view.toLowerCase()} data from the Elastic Email API.</p>
+                </header>
+                <CurrentView apiKey={apiKey} />
+            </main>
         </div>
-        <button onClick={handleLogout} className="nav-btn logout-btn">
-            <Icon path={ICONS.LOGOUT} />
-            <span>Log Out</span>
-        </button>
-      </nav>
-      <main className="content">
-        <header className="content-header">
-            <h2>{view}</h2>
-            <p>View your latest {view.toLowerCase()} data from the Elastic Email API.</p>
-        </header>
-        <CurrentView apiKey={apiKey} />
-      </main>
     </div>
   );
 };

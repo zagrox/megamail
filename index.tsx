@@ -12,6 +12,7 @@ const Icon = ({ path, className = '' }: { path: string; className?: string }) =>
 );
 
 const ICONS = {
+    DASHBOARD: "M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z",
     ACCOUNT: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
     BOUNCED: "M9 10l-5 5 5 5M20 4v7a4 4 0 01-4 4H4",
     CALENDAR: "M8 2v4M16 2v4M3 10h18M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
@@ -35,9 +36,9 @@ const ICONS = {
     PLUS: "M12 5v14m-7-7h14",
     PRICE_TAG: "M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7H7.01",
     PUZZLE: "M20.5 11H19v-2.14a2.5 2.5 0 0 0-2.5-2.5H14V4.5a2.5 2.5 0 0 0-2.5-2.5h-3A2.5 2.5 0 0 0 6 4.5V6H3.5a2.5 2.5 0 0 0-2.5 2.5V11H2.5a2.5 2.5 0 0 1 0 5H1v2.14a2.5 2.5 0 0 0 2.5 2.5H6V23.5a2.5 2.5 0 0 0 2.5 2.5h3A2.5 2.5 0 0 0 14 23.5V22h2.5a2.5 2.5 0 0 0 2.5-2.5V17h1.5a2.5 2.5 0 0 1 0-5z",
-    SEND_EMAIL: "M22 2L11 13L2 9l20-7zM22 2l-7 20-4-9-9-4 20-7z",
+    SEND_EMAIL: "m22 2-7 20-4-9-9-4 20-7Zm0 0L11 13 2 9l20-7Z",
     SERVER: "M23 12H1m22-6H1m0 12H1M6 6v12M18 6v12",
-    STATS: "M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15",
+    STATS: "M2.9 12.9a9 9 0 0 1 12.7 0l4.4 4.4m-18.4 0 4.4-4.4a9 9 0 0 1 12.7 0M12 3v1m0 16v1M3 12h1m16 0h1M5.6 5.6l.7.7m12.1-.7-.7.7m0 11.4.7.7m-12.1.7-.7-.7",
     TRENDING_UP: "M23 6l-9.5 9.5-5-5L1 18",
     USER_PLUS: "M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M8.5 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM20 8v6M23 11h-6",
     VERIFY: "M22 11.08V12a10 10 0 1 1-5.93-9.14",
@@ -1482,6 +1483,106 @@ const SMTPView = ({ apiKey }) => {
     );
 };
 
+const DashboardView = ({ apiKey, onNavigate }) => {
+    const { data: accountData, loading: loadingAccount, error: errorAccount } = useApi('/account/load', apiKey);
+    
+    const thirtyDaysAgo = getPastDateByDays(30);
+    const apiParams = { from: formatDateForApiV4(thirtyDaysAgo) };
+    const { data: statsData, loading: loadingStats, error: errorStats } = useApiV4(`/statistics`, apiKey, apiParams);
+    
+    const loading = loadingAccount || loadingStats;
+    const error = errorAccount || errorStats;
+
+    const navDescriptions = {
+        'Statistics': 'Dive deep into your email performance metrics.',
+        'Account': 'View your account details and sending reputation.',
+        'Contacts': 'Manage your audience and view contact details.',
+        'Email List': 'Organize your contacts into targeted lists.',
+        'Segments': 'Create dynamic segments for precision targeting.',
+        'Send Email': 'Craft and send beautiful emails in minutes.',
+        'Campaigns': 'Track the performance of your bulk email campaigns.',
+        'Domains': 'Manage and verify your sending domains for better deliverability.',
+        'SMTP': 'Configure SMTP credentials for external applications.'
+    };
+
+    const getReputationInfo = (reputation) => {
+      const score = Number(reputation || 0);
+      if (score >= 90) return { className: 'good', text: 'Excellent' };
+      if (score >= 70) return { className: 'medium', text: 'Good' };
+      return { className: 'bad', text: 'Needs Improvement' };
+    }
+
+    if (loading) return <CenteredMessage><Loader /></CenteredMessage>;
+    if (error) return <ErrorMessage error={error} />;
+    
+    const reputationInfo = getReputationInfo(accountData?.reputation);
+
+    return (
+        <div className="dashboard-container">
+            <div className="dashboard-header">
+                <div>
+                    <h2>Welcome to MegaMail</h2>
+                    <p>Your complete email marketing command center. Here's a snapshot of your account.</p>
+                </div>
+                <div className="dashboard-actions">
+                    <button className="btn btn-primary" onClick={() => onNavigate('Send Email')}>
+                        <Icon path={ICONS.SEND_EMAIL} />
+                        <span>Send an Email</span>
+                    </button>
+                    <button className="btn" onClick={() => onNavigate('Contacts')}>
+                         <Icon path={ICONS.CONTACTS} />
+                        <span>Manage Contacts</span>
+                    </button>
+                </div>
+            </div>
+
+            <div className="dashboard-stats-grid">
+                <div className="card stat-card">
+                    <div className="card-icon-wrapper"><Icon path={ICONS.TRENDING_UP} /></div>
+                    <div className="card-details">
+                        <div className="card-title">Sending Reputation</div>
+                        <div className="card-content">
+                            <span className={`reputation-score ${reputationInfo.className}`}>{accountData?.reputation ? `${Number(accountData.reputation).toFixed(2)}%` : 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="card stat-card">
+                    <div className="card-icon-wrapper"><Icon path={ICONS.MAIL} /></div>
+                    <div className="card-details">
+                        <div className="card-title">Emails Sent (Last 30d)</div>
+                        <div className="card-content">{statsData?.EmailTotal?.toLocaleString() ?? '0'}</div>
+                    </div>
+                </div>
+                <div className="card stat-card">
+                    <div className="card-icon-wrapper"><Icon path={ICONS.CONTACTS} /></div>
+                    <div className="card-details">
+                        <div className="card-title">Total Contacts</div>
+                        <div className="card-content">{accountData?.contactscount?.toLocaleString() ?? '0'}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="dashboard-section-header">
+                <h3>Explore Your Tools</h3>
+                <p>Everything you need to succeed with email marketing.</p>
+            </div>
+
+            <div className="dashboard-nav-grid">
+                {navItems.filter(item => item.id !== 'Dashboard').map(item => (
+                    <div key={item.id} className="card nav-card" onClick={() => onNavigate(item.id)}>
+                        <Icon path={item.icon} className="nav-card-icon" />
+                        <h4 className="nav-card-title">{item.label}</h4>
+                        <p className="nav-card-description">{navDescriptions[item.id] || `Manage your ${item.label.toLowerCase()}.`}</p>
+                    </div>
+                ))}
+            </div>
+
+             <footer className="dashboard-branding-footer">
+                <p><strong>MegaMail</strong> by <strong>ZAGROX.com Development</strong> — Powered by the <strong>Mailzila.com</strong> Email API</p>
+            </footer>
+        </div>
+    );
+};
 
 // --- Auth Component ---
 const AuthPage = ({ onLogin }) => {
@@ -1530,6 +1631,7 @@ const AuthPage = ({ onLogin }) => {
 // --- Main App Component ---
 
 const views = {
+    Dashboard: DashboardView,
     Statistics: StatisticsView,
     Account: AccountView,
     Contacts: ContactsView,
@@ -1542,6 +1644,7 @@ const views = {
 };
 
 const navItems = [
+    { id: 'Dashboard', label: 'Dashboard', icon: ICONS.DASHBOARD },
     { id: 'Statistics', label: 'Statistics', icon: ICONS.STATS },
     { id: 'Account', label: 'Account', icon: ICONS.ACCOUNT },
     { id: 'Contacts', label: 'Contacts', icon: ICONS.CONTACTS },
@@ -1555,7 +1658,7 @@ const navItems = [
 
 const App = () => {
   const [apiKey, setApiKey] = useState(localStorage.getItem('elasticEmailApiKey'));
-  const [view, setView] = useState('Statistics');
+  const [view, setView] = useState('Dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogin = useCallback((key) => {
@@ -1585,25 +1688,31 @@ const App = () => {
         {isMobileMenuOpen && <div className="mobile-menu-overlay" onClick={() => setIsMobileMenuOpen(false)}></div>}
         <nav className="sidebar">
             <div>
-            <div className="sidebar-header logo-font">MegaMail</div>
-            <div className="nav">
-                {navItems.map(item => (
-                <button
-                    key={item.id}
-                    className={`nav-btn ${view === item.id ? 'active' : ''}`}
-                    onClick={() => handleSetView(item.id)}
-                    aria-label={item.label}
-                >
-                    <Icon path={item.icon} />
-                    <span>{item.label}</span>
+                <div className="sidebar-header logo-font">MegaMail</div>
+                <div className="nav">
+                    {navItems.map(item => (
+                    <button
+                        key={item.id}
+                        className={`nav-btn ${view === item.id ? 'active' : ''}`}
+                        onClick={() => handleSetView(item.id)}
+                        aria-label={item.label}
+                    >
+                        <Icon path={item.icon} />
+                        <span>{item.label}</span>
+                    </button>
+                    ))}
+                </div>
+            </div>
+            <div>
+                <div className="sidebar-footer">
+                    <p>A service by <strong>ZAGROX.com</strong></p>
+                    <p>Powered by <strong>Mailzila.com</strong></p>
+                </div>
+                <button onClick={handleLogout} className="nav-btn logout-btn">
+                    <Icon path={ICONS.LOGOUT} />
+                    <span>Log Out</span>
                 </button>
-                ))}
             </div>
-            </div>
-            <button onClick={handleLogout} className="nav-btn logout-btn">
-                <Icon path={ICONS.LOGOUT} />
-                <span>Log Out</span>
-            </button>
         </nav>
         <div className="main-wrapper">
             <header className="mobile-header">
@@ -1618,7 +1727,7 @@ const App = () => {
                     <h2>{view}</h2>
                     <p>View your latest {view.toLowerCase()} data from the Elastic Email API.</p>
                 </header>
-                <CurrentView apiKey={apiKey} />
+                <CurrentView apiKey={apiKey} onNavigate={handleSetView} />
             </main>
         </div>
     </div>

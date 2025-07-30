@@ -231,10 +231,6 @@ body {
   font-weight: 600;
 }
 
-.logout-btn {
-    margin-top: 1rem;
-}
-
 .logout-btn:hover {
     color: var(--danger-color);
     background-color: #FEF2F2;
@@ -1297,19 +1293,13 @@ td {
 
 
 /* Sidebar Footer */
-.sidebar-footer {
-    padding: 1rem 0.75rem;
-    font-size: 0.75rem;
-    color: var(--subtle-text-color);
-    border-top: 1px solid var(--border-color);
+.sidebar-footer-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-top: 0.5rem;
     margin-top: 1rem;
-}
-.sidebar-footer p {
-    line-height: 1.4;
-}
-.sidebar-footer strong {
-    color: var(--text-color);
-    font-weight: 600;
+    border-top: 1px solid var(--border-color);
 }
 .nav-divider {
     height: 1px;

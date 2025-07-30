@@ -43,6 +43,9 @@ const ICONS = {
     TRENDING_UP: "M23 6l-9.5 9.5-5-5L1 18",
     USER_PLUS: "M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M8.5 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM20 8v6M23 11h-6",
     VERIFY: "M22 11.08V12a10 10 0 1 1-5.93-9.14",
+    CHECK: "M20 6L9 17l-5-5",
+    X_CIRCLE: "M10 10l4 4m0-4l-4 4M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+    LOADING_SPINNER: "M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83",
 };
 
 // --- API Helper for v2 ---
@@ -120,14 +123,17 @@ const apiFetchV4 = async (endpoint: string, apiKey: string, options: { method?: 
 
 // --- Custom Hook for API calls (v2) ---
 const useApi = (endpoint: string, apiKey: string, params: Record<string, any> = {}, refetchIndex = 0) => {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{message: string, endpoint: string} | null>(null);
   
   const paramsString = JSON.stringify(params);
 
   useEffect(() => {
-    if (!apiKey || !endpoint) return;
+    if (!apiKey || !endpoint || refetchIndex === 0) {
+        setLoading(false);
+        return;
+    };
 
     const fetchData = async () => {
       setLoading(true);
@@ -362,7 +368,7 @@ const StatisticsView = ({ apiKey }: { apiKey: string }) => {
 };
 
 const AccountView = ({ apiKey }: { apiKey: string }) => {
-    const { data, loading, error } = useApi('/account/load', apiKey);
+    const { data, loading, error } = useApi('/account/load', apiKey, {}, 1);
     const [copyStatus, setCopyStatus] = useState('');
 
     const handleCopy = (textToCopy: string, message: string) => {
@@ -457,9 +463,56 @@ const creditPackages = [
     { credits: 150000, price: 5000000 }, { credits: 200000, price: 6000000 },
 ];
 
+const CreditHistoryModal = ({ isOpen, onClose, apiKey }: { isOpen: boolean, onClose: () => void, apiKey: string }) => {
+    // Use the v2 hook as originally suggested for this specific endpoint
+    const refetchIndex = isOpen ? 1 : 0;
+    const { data: history, loading, error } = useApi('/account/loademailcreditshistory', apiKey, {}, refetchIndex);
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title="Credit Purchase History">
+            {loading && <CenteredMessage><Loader /></CenteredMessage>}
+            {error && <ErrorMessage error={error} />}
+            {!loading && !error && (
+                <div className="table-container">
+                    <table className="credit-history-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th style={{ textAlign: 'right' }}>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {history && Array.isArray(history.historyitems) && history.historyitems.length > 0 ? (
+                                history.historyitems.map((item: any, index: number) => (
+                                    <tr key={index}>
+                                        <td>{formatDateForDisplay(item.historydate)}</td>
+                                        <td>{item.notes}</td>
+                                        <td className="credit-history-amount">
+                                            +{item.amount?.toLocaleString() ?? '0'}
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={3} style={{ textAlign: 'center', padding: '2rem' }}>
+                                        No credit purchase history found.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </Modal>
+    );
+};
+
+
 const BuyCreditsView = ({ apiKey, user }: { apiKey: string, user: any }) => {
     const [isSubmitting, setIsSubmitting] = useState<number | null>(null); // track which package is submitting
     const [modalState, setModalState] = useState({ isOpen: false, title: '', message: '' });
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
     const handlePurchase = async (pkg: {credits: number, price: number}) => {
         if (!user || !user.email) {
@@ -510,6 +563,15 @@ const BuyCreditsView = ({ apiKey, user }: { apiKey: string, user: any }) => {
 
     return (
         <div className="buy-credits-view">
+            <div className="view-header">
+                <h3>Choose a Package</h3>
+                <button className="btn" onClick={() => setIsHistoryOpen(true)}>
+                    <Icon path={ICONS.CALENDAR} />
+                    View History
+                </button>
+            </div>
+            <CreditHistoryModal isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} apiKey={apiKey} />
+
             <Modal isOpen={modalState.isOpen} onClose={closeModal} title={modalState.title}>
                 <p style={{whiteSpace: "pre-wrap"}}>{modalState.message}</p>
                  {modalState.title === 'Purchase Initiated' && (
@@ -1154,35 +1216,107 @@ const CampaignsView = ({ apiKey }: { apiKey: string }) => {
     );
 };
 
+const DNS_RECORDS_CONFIG = {
+    SPF: {
+        type: 'TXT',
+        name: (domain: string) => domain,
+        expectedValue: 'v=spf1 a mx include:mailzila.com ~all',
+        check: (data: string) => data.includes('v=spf1') && data.includes('include:mailzila.com'),
+        host: '@ or your domain',
+    },
+    DKIM: {
+        type: 'TXT',
+        name: (domain: string) => `api._domainkey.${domain}`,
+        expectedValue: 'k=rsa;t=s;p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCbmGbQMzYeMvxwtNQoXN0waGYaciuKx8mtMh5czguT4EZlJXuCt6V+l56mmt3t68FEX5JJ0q4ijG71BGoFRkl87uJi7LrQt1ZZmZCvrEII0YO4mp8sDLXC8g1aUAoi8TJgxq2MJqCaMyj5kAm3Fdy2tzftPCV/lbdiJqmBnWKjtwIDAQAB',
+        check: (data: string) => data.includes('k=rsa;') && data.includes('p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCbmGbQMzYeMvxwtNQoXN0waGYaciuKx8mtMh5czguT4EZlJXuCt6V+l56mmt3t68FEX5JJ0q4ijG71BGoFRkl87uJi7LrQt1ZZmZCvrEII0YO4mp8sDLXC8g1aUAoi8TJgxq2MJqCaMyj5kAm3Fdy2tzftPCV/lbdiJqmBnWKjtwIDAQAB'),
+        host: 'api._domainkey',
+    },
+    Tracking: {
+        type: 'CNAME',
+        name: (domain: string) => `tracking.${domain}`,
+        expectedValue: 'app.mailzila.com',
+        check: (data: string) => data.includes('app.mailzila.com'),
+        host: 'tracking',
+    },
+    DMARC: {
+        type: 'TXT',
+        name: (domain: string) => `_dmarc.${domain}`,
+        expectedValue: 'v=DMARC1;p=none;pct=10;aspf=r;adkim=r;',
+        check: (data: string) => data.includes('v=DMARC1'),
+        host: '_dmarc',
+    },
+};
 
-const DomainDNSRecords = ({ apiKey, domainName }: { apiKey: string, domainName: string }) => {
-    const { data: verificationDetails, loading, error } = useApiV4(`/verifications/domains/${encodeURIComponent(domainName)}`, apiKey);
+type VerificationStatus = 'idle' | 'checking' | 'verified' | 'failed';
 
-    if (loading) return <div className="expanded-loader"><Loader /></div>;
-    if (error) return <div className="domain-card-expanded-content"><ErrorMessage error={error} /></div>;
-    if (!verificationDetails) return <div className="domain-card-expanded-content"><p>Could not load DNS records.</p></div>;
+const VerificationStatusIndicator = ({ status }: { status: VerificationStatus }) => {
+    switch (status) {
+        case 'checking':
+            return <span className="verification-status status-checking"><Icon path={ICONS.LOADING_SPINNER} className="icon-spinner" /> Checking...</span>;
+        case 'verified':
+            return <span className="verification-status status-verified"><Icon path={ICONS.CHECK} className="icon-success" /> Verified</span>;
+        case 'failed':
+            return <span className="verification-status status-failed"><Icon path={ICONS.X_CIRCLE} className="icon-danger" /> Not Verified</span>;
+        default:
+            return null;
+    }
+};
 
-    const spfRecord = verificationDetails.SpfRecord || verificationDetails.spfrecord || 'N/A';
-    const dkimRecord = verificationDetails.DkimRecord || verificationDetails.dkimrecord || 'N/A';
-    const trackingRecord = verificationDetails.TrackingRecord || verificationDetails.trackingrecord || 'N/A';
+const DomainVerificationChecker = ({ domainName }: { domainName: string }) => {
+    const [statuses, setStatuses] = useState<Record<string, { status: VerificationStatus }>>(
+      Object.keys(DNS_RECORDS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: { status: 'idle' } }), {})
+    );
+    const [isChecking, setIsChecking] = useState(false);
+
+    const checkAllDns = async () => {
+        setIsChecking(true);
+        setStatuses(prev => Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: { status: 'checking' } }), {}));
+
+        for (const [key, config] of Object.entries(DNS_RECORDS_CONFIG)) {
+            try {
+                const response = await fetch(`https://dns.google/resolve?name=${config.name(domainName)}&type=${config.type}`);
+                if (!response.ok) {
+                    throw new Error(`DNS lookup failed with status ${response.status}`);
+                }
+                const result = await response.json();
+                
+                let isVerified = false;
+                if (result.Status === 0 && result.Answer) {
+                    const foundRecord = result.Answer.find((ans: any) => config.check(ans.data.replace(/"/g, '')));
+                    if (foundRecord) {
+                        isVerified = true;
+                    }
+                }
+                setStatuses(prev => ({ ...prev, [key]: { status: isVerified ? 'verified' : 'failed' } }));
+
+            } catch (error) {
+                console.error(`Error checking ${key}:`, error);
+                setStatuses(prev => ({ ...prev, [key]: { status: 'failed' } }));
+            }
+        }
+        setIsChecking(false);
+    };
 
     return (
-        <div className="domain-card-expanded-content">
-            <p>Add these records to your domain's DNS settings to ensure delivery.</p>
-            <div className="dns-record">
-                <label>SPF Record (TXT)</label>
-                <div className="dns-record-name"><span>Name/Host:</span> @ or your domain</div>
-                <input type="text" readOnly value={spfRecord} onClick={(e) => (e.target as HTMLInputElement).select()} />
-            </div>
-            <div className="dns-record">
-                <label>DKIM Record (TXT)</label>
-                <div className="dns-record-name"><span>Name/Host:</span> api._domainkey</div>
-                <input type="text" readOnly value={dkimRecord} onClick={(e) => (e.target as HTMLInputElement).select()} />
-            </div>
-            <div className="dns-record">
-                <label>Tracking CNAME Record</label>
-                <div className="dns-record-name"><span>Name/Host:</span> tracking</div>
-                <input type="text" readOnly value={trackingRecord} onClick={(e) => (e.target as HTMLInputElement).select()} />
+        <div className="domain-verification-checker">
+            <button className="btn check-all-btn" onClick={checkAllDns} disabled={isChecking}>
+                {isChecking ? <Loader /> : <Icon path={ICONS.VERIFY} />}
+                {isChecking ? 'Checking DNS...' : 'Check DNS Status'}
+            </button>
+            <div className="dns-records-list">
+                {Object.entries(DNS_RECORDS_CONFIG).map(([key, config]) => (
+                    <div className="dns-record-item" key={key}>
+                        <div className="dns-record-item-header">
+                            <h4>{key} Record</h4>
+                            <VerificationStatusIndicator status={statuses[key]?.status} />
+                        </div>
+                        <div className="dns-record-details">
+                            <div className="detail"><strong>Host:</strong> <code>{config.host}</code></div>
+                            <div className="detail"><strong>Type:</strong> <code>{config.type}</code></div>
+                            <div className="detail"><strong>Value:</strong> <code>{config.expectedValue}</code></div>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );
@@ -1227,18 +1361,8 @@ const DomainsView = ({ apiKey }: { apiKey: string }) => {
             setActionStatus({ type: 'error', message: `Failed to delete domain: ${err.message}` });
         }
     };
-
-    const handleVerifyDomain = async (domainName: string) => {
-        try {
-            await apiFetchV4(`/domains/${encodeURIComponent(domainName)}/verify`, apiKey, { method: 'PUT' });
-            setActionStatus({ type: 'success', message: `Verification re-check initiated for "${domainName}". Status will update shortly.` });
-            setTimeout(refetch, 3000); // Give API some time before refetching
-        } catch (err: any) {
-            setActionStatus({ type: 'error', message: `Failed to start verification: ${err.message}` });
-        }
-    }
     
-    const domainsList = Array.isArray(data) ? data : [];
+    const domainsList = Array.isArray(data) ? data : (data && Array.isArray(data.Data)) ? data.Data : [];
     const isNotFoundError = error && (error.message.includes('Not Found') || error.message.includes('not found'));
     const showNoDomainsMessage = !loading && !error && domainsList.length === 0;
 
@@ -1280,7 +1404,6 @@ const DomainsView = ({ apiKey }: { apiKey: string }) => {
                             <div className="domain-card-header">
                                 <h3>{domainName}</h3>
                                 <div className="action-buttons">
-                                    <button className="btn" onClick={() => handleVerifyDomain(domainName)}>Re-check</button>
                                     <button className="btn-icon btn-icon-danger" onClick={() => handleDeleteDomain(domainName)} aria-label={`Delete ${domainName}`}>
                                         <Icon path={ICONS.DELETE} />
                                     </button>
@@ -1295,10 +1418,10 @@ const DomainsView = ({ apiKey }: { apiKey: string }) => {
                                 </div>
                             </div>
                             <div className="domain-card-footer" onClick={() => setExpandedDomain(d => d === domainName ? null : domainName)} role="button" aria-expanded={isExpanded}>
-                                <span>Show DNS Records</span>
+                                <span>Show DNS & Verify</span>
                                 <Icon path={ICONS.CHEVRON_DOWN} className={isExpanded ? 'expanded' : ''} />
                             </div>
-                            {isExpanded && <DomainDNSRecords apiKey={apiKey} domainName={domainName} />}
+                            {isExpanded && <DomainVerificationChecker domainName={domainName} />}
                         </div>
                     )
                 })}
@@ -1423,7 +1546,7 @@ const App = () => {
     const [view, setView] = useState('Dashboard');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-    const { data: accountData } = useApi('/account/load', apiKey || '');
+    const { data: accountData } = useApi('/account/load', apiKey || '', {}, apiKey ? 1 : 0);
     
     useEffect(() => {
         if (apiKey) {

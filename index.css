@@ -1,5 +1,6 @@
 
 
+
 :root {
   --primary-color: #1A2B3C;
   --secondary-color: #007BFF;
@@ -914,7 +915,6 @@ td {
     justify-content: space-between;
     align-items: center;
     padding: 1rem 1.25rem;
-    border-top: 1px solid var(--border-color);
     background-color: #F8FAFC;
     cursor: pointer;
     font-weight: 500;
@@ -1672,6 +1672,40 @@ td {
     color: var(--text-color);
 }
 
+/* Buy Credits View Header */
+.buy-credits-view .view-header {
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.buy-credits-view .view-header h3 {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin: 0;
+}
+.buy-credits-view .view-header .btn {
+    margin-top: 0;
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+.buy-credits-view .view-header .btn:hover {
+    background-color: var(--background-color);
+}
+
+/* Credit History Modal Table */
+.credit-history-table th:last-child,
+.credit-history-table td:last-child {
+    text-align: right;
+}
+
+.credit-history-amount {
+    font-family: monospace;
+    font-weight: 600;
+    color: var(--success-color);
+}
+
 /* Campaigns View Redesign */
 .campaign-grid {
     display: grid;
@@ -1781,6 +1815,89 @@ td {
     margin: 0.25rem auto 0;
 }
 
+/* Domain Verification Checker */
+.domain-verification-checker {
+    background-color: #F8FAFC;
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+.domain-verification-checker .check-all-btn {
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+.check-all-btn .loader {
+    width: 20px;
+    height: 20px;
+    border-width: 3px;
+}
+.dns-records-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.dns-record-item {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+}
+.dns-record-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.dns-record-item-header h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+}
+.verification-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+.verification-status .icon {
+    width: 18px;
+    height: 18px;
+}
+.icon-spinner {
+    animation: spin 1s linear infinite;
+}
+.icon-success {
+    color: var(--success-color);
+}
+.icon-danger {
+    color: var(--danger-color);
+}
+.status-verified { color: var(--success-color); }
+.status-failed { color: var(--danger-color); }
+.status-checking { color: var(--subtle-text-color); }
+
+.dns-record-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.dns-record-details .detail {
+    font-size: 0.875rem;
+}
+.dns-record-details .detail strong {
+    color: var(--subtle-text-color);
+    min-width: 50px;
+    display: inline-block;
+}
+.dns-record-details .detail code {
+    font-family: monospace;
+    background: #eef2f7;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    word-break: break-all;
+}
 
 /* Responsive */
 @media (max-width: 992px) {

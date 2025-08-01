@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 
 const ELASTIC_EMAIL_API_BASE = 'https://api.elasticemail.com/v2';
 const ELASTIC_EMAIL_API_V4_BASE = 'https://api.elasticemail.com/v4';
-const DIRECTUS_URL = 'https://user.advering.ltd';
+const DIRECTUS_URL = '/api/directus';
 
 // --- Icon Components ---
 const Icon = ({ path, className = '' }: { path: string; className?: string }) => (
@@ -345,7 +345,7 @@ const useAppContext = () => {
 // --- Reusable Components ---
 const Loader = () => <div className="loader"></div>;
 
-const ActionStatus = ({ status, onDismiss }: { status: {type: 'success' | 'error', message: string} | null, onDismiss?: () => void }) => {
+const ActionStatus = ({ status, onDismiss }: { status: {type: 'success' | 'error', message: ReactNode} | null, onDismiss?: () => void }) => {
     useEffect(() => {
         if (status && status.type === 'success' && onDismiss) {
             const timer = setTimeout(() => {
@@ -550,32 +550,10 @@ const AccountView = () => {
         }
     };
 
-
-    if (loading) return <CenteredMessage><Loader /></CenteredMessage>;
-    if (!data || !user) return <CenteredMessage>No account data found.</CenteredMessage>;
-
-    const getStatusType = (status: string) => {
-        const cleanStatus = String(status || '').toLowerCase().replace(/\s/g, '');
-        if (cleanStatus.includes('active')) return 'success';
-        if (cleanStatus.includes('disabled') || cleanStatus.includes('abuse')) return 'danger';
-        if (cleanStatus.includes('review') || cleanStatus.includes('verification')) return 'warning';
-        return 'default';
+    if (loading) {
+        return <CenteredMessage><Loader /></CenteredMessage>;
     }
-
-    const getReputationInfo = (reputation: number) => {
-        const score = Number(reputation || 0);
-        if (score >= 80) return { text: 'Excellent', className: 'good' };
-        if (score >= 60) return { text: 'Good', className: 'good' };
-        if (score >= 40) return { text: 'Average', className: 'medium' };
-        if (score >= 20) return { text: 'Poor', className: 'bad' };
-        return { text: 'Very Poor', className: 'bad' };
-    };
     
-    const accountStatus = data.status || 'Active';
-    const statusType = getStatusType(accountStatus);
-    const reputation = getReputationInfo(data.reputation);
-    const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
-
     return (
         <div className="profile-view-container">
             <div className="profile-hero">
@@ -583,1062 +561,284 @@ const AccountView = () => {
                     <Icon path={ICONS.ACCOUNT} />
                 </div>
                 <div className="profile-info">
-                    <h3>{fullName || 'User Profile'}</h3>
-                    <p className="profile-email">{data.email}</p>
-                    <div className="profile-meta">
-                        <div className="meta-item">
-                            <label>Public ID</label>
-                            <span>{data.publicaccountid || 'N/A'}</span>
-                        </div>
-                        <div className="meta-item">
-                            <label>Joined</label>
-                            <span>{formatDateForDisplay(data.datecreated)}</span>
-                        </div>
-                        <div className="meta-item">
-                            <label>Last Activity</label>
-                            <span>{formatDateForDisplay(data.lastactivity)}</span>
-                        </div>
+                    <h3>{user?.first_name} {user?.last_name}</h3>
+                    <p className="profile-email">{user?.email}</p>
+                </div>
+                <div className="profile-meta">
+                     <div className="meta-item">
+                        <label>User Since</label>
+                        <span className="monospace">{formatDateForDisplay(data?.datecreated)}</span>
+                    </div>
+                     <div className="meta-item">
+                        <label>Reputation</label>
+                         <span>
+                             {data?.reputation && (
+                                <span className={`reputation-score ${data.reputation > 80 ? 'good' : data.reputation > 60 ? 'medium' : 'bad'}`}>
+                                    {data.reputation.toFixed(2)}%
+                                </span>
+                             )}
+                         </span>
                     </div>
                 </div>
             </div>
 
-            <ActionStatus status={status} onDismiss={() => setStatus(null)} />
-
-            <div className="card-grid account-grid">
-                <AccountDataCard title="Account Status" iconPath={ICONS.VERIFY}>
-                    <Badge text={accountStatus} type={statusType} />
-                </AccountDataCard>
-                <AccountDataCard title="Reputation" iconPath={ICONS.TRENDING_UP}>
-                    <span className={`reputation-score ${reputation.className}`}>{data.reputation ?? 0}%</span>
-                    <span className="reputation-text">{reputation.text}</span>
-                </AccountDataCard>
-                <AccountDataCard title="Daily Send Limit" iconPath={ICONS.SEND_EMAIL}>
-                    {(data.dailysendlimit ?? 0).toLocaleString()}
-                </AccountDataCard>
-            </div>
-            
-            <form className="form-container" onSubmit={handleSaveKey} style={{maxWidth: 'none', marginTop: '1rem'}}>
-                 <div className="form-group full-width">
-                    <label htmlFor="api-key-input">Your Elastic Email API Key</label>
-                    <input id="api-key-input" type="password" value={newApiKey} onChange={e => setNewApiKey(e.target.value)} />
-                    <small style={{display: 'block', marginTop: '0.5rem'}}>
-                        Update your key here. It will be stored securely.
-                    </small>
-                </div>
-                <div className="form-actions">
-                    <button type="submit" className="btn btn-primary" disabled={isSaving}>
-                        {isSaving ? <Loader /> : 'Save API Key'}
-                    </button>
-                </div>
-            </form>
-        </div>
-    );
-};
-
-const PURCHASE_WEBHOOK_URL = 'https://auto.zagrox.com/webhook-test/emailpack'; // As requested, URL is here for easy changes.
-
-const creditPackages = [
-    { credits: 10000, price: 500000 }, { credits: 20000, price: 950000 },
-    { credits: 30000, price: 1350000 }, { credits: 40000, price: 1700000 },
-    { credits: 50000, price: 2000000, popular: true }, { credits: 60000, price: 2340000 },
-    { credits: 70000, price: 2660000 }, { credits: 80000, price: 2960000 },
-    { credits: 100000, price: 3500000 }, { credits: 125000, price: 4250000 },
-    { credits: 150000, price: 5000000 }, { credits: 200000, price: 6000000 },
-];
-
-const CreditHistoryModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
-    const { apiKey } = useAppContext();
-    const { data: history, loading, error } = useApi('/account/loademailcreditshistory', apiKey, {}, { enabled: isOpen });
-
-    return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Credit Purchase History">
-            {loading && <CenteredMessage><Loader /></CenteredMessage>}
-            {error && <ErrorMessage error={error} />}
-            {!loading && !error && (
-                <div className="table-container">
-                    <table className="credit-history-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Description</th>
-                                <th style={{ textAlign: 'right' }}>Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {history && Array.isArray(history.historyitems) && history.historyitems.length > 0 ? (
-                                history.historyitems.map((item: any, index: number) => (
-                                    <tr key={index}>
-                                        <td>{formatDateForDisplay(item.historydate)}</td>
-                                        <td>{item.notes}</td>
-                                        <td className="credit-history-amount">
-                                            +{item.amount?.toLocaleString() ?? '0'}
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={3} style={{ textAlign: 'center', padding: '2rem' }}>
-                                        No credit purchase history found.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-        </Modal>
-    );
-};
-
-
-const BuyCreditsView = () => {
-    const { apiKey, user } = useAppContext();
-    const [isSubmitting, setIsSubmitting] = useState<number | null>(null); // track which package is submitting
-    const [modalState, setModalState] = useState({ isOpen: false, title: '', message: '' });
-    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-
-    const handlePurchase = async (pkg: {credits: number, price: number}) => {
-        if (!user || !user.email) {
-            setModalState({ isOpen: true, title: 'Error', message: 'User information is not available. Cannot proceed with purchase.' });
-            return;
-        }
-
-        setIsSubmitting(pkg.credits);
-
-        const params = new URLSearchParams({
-            userapikey: apiKey!,
-            useremail: user.email,
-            amount: pkg.credits.toString(),
-            totalprice: pkg.price.toString(),
-        });
-        
-        const requestUrl = `${PURCHASE_WEBHOOK_URL}?${params.toString()}`;
-
-        try {
-            const response = await fetch(requestUrl, {
-                method: 'GET',
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Webhook failed with status: ${response.status}. ${errorText}`);
-            }
-
-            setModalState({
-                isOpen: true,
-                title: 'Purchase Initiated',
-                message: `You have selected the ${pkg.credits.toLocaleString()} credit package. You will be redirected to complete your payment.`
-            });
-
-        } catch (error: any) {
-            console.error('Purchase webhook error:', error);
-            setModalState({
-                isOpen: true,
-                title: 'Purchase Failed',
-                message: `There was an error processing your request. Please try again later. (Error: ${error.message})`
-            });
-        } finally {
-            setIsSubmitting(null);
-        }
-    };
-    
-    const closeModal = () => setModalState({ isOpen: false, title: '', message: '' });
-
-    return (
-        <div className="buy-credits-view">
-            <div className="view-header">
-                <h3>Choose a Package</h3>
-                <button className="btn" onClick={() => setIsHistoryOpen(true)}>
-                    <Icon path={ICONS.CALENDAR} />
-                    View History
-                </button>
-            </div>
-            <CreditHistoryModal isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} />
-
-            <Modal isOpen={modalState.isOpen} onClose={closeModal} title={modalState.title}>
-                <p style={{whiteSpace: "pre-wrap"}}>{modalState.message}</p>
-                 {modalState.title === 'Purchase Initiated' && (
-                    <small style={{display: 'block', marginTop: '1rem', color: 'var(--subtle-text-color)'}}>
-                        This is a test environment. No real payment will be processed.
-                    </small>
-                )}
-            </Modal>
-            <div className="packages-grid">
-                {creditPackages.map((pkg) => (
-                    <div key={pkg.credits} className={`card package-card ${pkg.popular ? 'popular' : ''}`}>
-                        {pkg.popular && <div className="popular-badge">Most Popular</div>}
-                        <div className="package-card-header">
-                            <h3>{pkg.credits.toLocaleString()}</h3>
-                            <span>Email Credits</span>
-                        </div>
-                        <div className="package-card-body">
-                            <div className="package-price">
-                                {pkg.price.toLocaleString()}
-                                <span> IRT</span>
-                            </div>
-                        </div>
-                        <div className="package-card-footer">
-                            <button
-                                className="btn btn-primary"
-                                onClick={() => handlePurchase(pkg)}
-                                disabled={isSubmitting !== null}
-                            >
-                                {isSubmitting === pkg.credits ? <Loader /> : 'Purchase Now'}
-                            </button>
-                        </div>
+            <div className="form-container" style={{maxWidth: '100%'}}>
+                 <form onSubmit={handleSaveKey}>
+                    <div className="form-group">
+                        <label htmlFor="api-key-input">Your Elastic Email API Key</label>
+                        <input
+                            id="api-key-input"
+                            type="text"
+                            value={newApiKey}
+                            onChange={(e) => setNewApiKey(e.target.value)}
+                            placeholder="Enter your Elastic Email API Key"
+                            required
+                        />
                     </div>
-                ))}
-            </div>
-            <div className="webhook-info">
-                <p>
-                    <strong>Developer Note:</strong> To change the purchase webhook URL, edit the <code>PURCHASE_WEBHOOK_URL</code> constant at the top of the <code>BuyCreditsView</code> component in <code>index.tsx</code>.
-                </p>
-            </div>
-        </div>
-    );
-};
-
-const DashboardView = ({ setView }: { setView: (view: string) => void }) => {
-    const { apiKey, accountData: user } = useAppContext();
-    const { data: statsData, loading: statsLoading, error: statsError } = useApiV4(`/statistics`, apiKey, { from: formatDateForApiV4(getPastDateByDays(30)) });
-
-    const navItems = [
-        { name: 'Statistics', icon: ICONS.STATS, desc: 'View detailed sending statistics and analytics.', view: 'Statistics' },
-        { name: 'Contacts', icon: ICONS.CONTACTS, desc: 'Manage your contacts, lists, and segments.', view: 'Contacts' },
-        { name: 'Send Email', icon: ICONS.SEND_EMAIL, desc: 'Compose and send a new email campaign.', view: 'Send Email' },
-        { name: 'Campaigns', icon: ICONS.CAMPAIGNS, desc: 'Review your past and ongoing email campaigns.', view: 'Campaigns' },
-        { name: 'Domains', icon: ICONS.DOMAINS, desc: 'Manage and verify your sending domains.', view: 'Domains' },
-        { name: 'SMTP', icon: ICONS.SERVER, desc: 'Get your SMTP credentials for integration.', view: 'SMTP' },
-    ];
-    
-    if (!user) return <CenteredMessage><Loader /></CenteredMessage>;
-    if (statsError) console.warn("Could not load dashboard stats:", statsError);
-
-    return (
-        <div className="dashboard-container">
-            <div className="dashboard-header">
-                <div>
-                    <h2>Welcome, {user?.firstname || 'User'}!</h2>
-                    <p>Here's a quick overview of your MegaMail account. Ready to launch your next campaign?</p>
-                </div>
-                <div className="dashboard-actions">
-                    <button className="btn" onClick={() => setView('Contacts')}><Icon path={ICONS.USER_PLUS} /> Manage Contacts</button>
-                    <button className="btn btn-primary" onClick={() => setView('Send Email')}><Icon path={ICONS.SEND_EMAIL} /> Send an Email</button>
-                </div>
-            </div>
-
-            <div className="dashboard-stats-grid">
-                 <AccountDataCard title="Sending Reputation" iconPath={ICONS.TRENDING_UP}>
-                    {user?.reputation ? `${user.reputation}%` : 'N/A'}
-                </AccountDataCard>
-                <AccountDataCard title="Emails Sent (30d)" iconPath={ICONS.MAIL}>
-                    {statsLoading ? '...' : (statsData?.EmailTotal?.toLocaleString() ?? '0')}
-                </AccountDataCard>
-                 <AccountDataCard title="Total Contacts" iconPath={ICONS.CONTACTS}>
-                    {user?.contactcount?.toLocaleString() ?? '0'}
-                </AccountDataCard>
-            </div>
-
-            <div className="dashboard-section">
-                <div className="dashboard-section-header">
-                    <h3>Explore Your Tools</h3>
-                    <p>Access all of MegaMail's powerful features from one place.</p>
-                </div>
-                <div className="dashboard-nav-grid">
-                    {navItems.map(item => (
-                        <div key={item.name} className="card nav-card clickable" onClick={() => setView(item.view)}>
-                            <Icon path={item.icon} className="nav-card-icon" />
-                            <div className="nav-card-title">{item.name}</div>
-                            <div className="nav-card-description">{item.desc}</div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            <div className="dashboard-branding-footer">
-                <p>MegaMail by <strong>ZAGROX</strong> & Powered by <strong>Mailzila.com</strong></p>
-            </div>
-        </div>
-    );
-};
-
-// --- START OF IMPLEMENTED VIEWS ---
-
-const ContactsView = () => {
-    const { apiKey } = useAppContext();
-    const [searchQuery, setSearchQuery] = useState('');
-    const [offset, setOffset] = useState(0);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [actionStatus, setActionStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
-
-    const CONTACTS_PER_PAGE = 20;
-
-    const { data: contacts, loading, error, refetch } = useApiV4('/contacts', apiKey, { limit: CONTACTS_PER_PAGE, offset, search: searchQuery }, { enabled: !!apiKey });
-
-    const handleAddContact = async (contactData: {Email: string, FirstName: string, LastName: string}) => {
-        try {
-            await apiFetchV4('/contacts', apiKey!, { method: 'POST', body: [contactData] });
-            setActionStatus({ type: 'success', message: `Contact ${contactData.Email} added successfully!` });
-            setIsModalOpen(false);
-            refetch();
-        } catch (err: any) {
-            setActionStatus({ type: 'error', message: `Failed to add contact: ${err.message}` });
-        }
-    };
-    
-    const handleDeleteContact = async (email: string) => {
-        if (!window.confirm(`Are you sure you want to delete ${email}?`)) return;
-        try {
-            await apiFetchV4(`/contacts/${encodeURIComponent(email)}`, apiKey!, { method: 'DELETE' });
-            setActionStatus({ type: 'success', message: `Contact ${email} deleted successfully!` });
-            refetch();
-        } catch (err: any) {
-            setActionStatus({ type: 'error', message: `Failed to delete contact: ${err.message}` });
-        }
-    };
-
-    return (
-        <div>
-            <ActionStatus status={actionStatus} onDismiss={() => setActionStatus(null)} />
-            <div className="view-header contacts-header">
-                <div className="search-bar">
-                    <input
-                        type="search"
-                        placeholder="Search contacts..."
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setOffset(0); // Reset to first page on search
-                        }}
-                    />
-                </div>
-                <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-                    <Icon path={ICONS.USER_PLUS} /> Add Contact
-                </button>
-            </div>
-
-            <Modal title="Add New Contact" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-                <AddContactForm onSubmit={handleAddContact} />
-            </Modal>
-
-            {loading && !contacts && <CenteredMessage><Loader /></CenteredMessage>}
-            {error && <ErrorMessage error={error} />}
-
-            <div className="table-container">
-                {loading && contacts && (
-                    <div className="table-overlay-loader">
-                        <Loader /> Loading...
+                    <ActionStatus status={status} onDismiss={() => setStatus(null)} />
+                    <div className="form-actions">
+                        <button type="submit" className="btn btn-primary" disabled={isSaving || newApiKey === apiKey}>
+                            {isSaving ? <Loader /> : 'Save API Key'}
+                        </button>
                     </div>
-                )}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Email</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Status</th>
-                            <th>Date Added</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {contacts?.length > 0 ? (
-                            contacts.map((contact: any) => (
-                                <tr key={contact.Email}>
-                                    <td>{contact.Email}</td>
-                                    <td>{contact.FirstName || '-'}</td>
-                                    <td>{contact.LastName || '-'}</td>
-                                    <td><Badge text={contact.Status} type={contact.Status === 'Active' ? 'success' : 'default'}/></td>
-                                    <td>{formatDateForDisplay(contact.DateAdded)}</td>
-                                    <td>
-                                        <div className="action-buttons">
-                                            <button className="btn-icon btn-icon-danger" onClick={() => handleDeleteContact(contact.Email)} aria-label="Delete contact">
-                                                <Icon path={ICONS.DELETE} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>
-                                    No contacts found.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
-
-            {contacts && (
-                <div className="pagination-controls">
-                    <button onClick={() => setOffset(o => Math.max(0, o - CONTACTS_PER_PAGE))} disabled={offset === 0 || loading}>
-                        Previous
-                    </button>
-                    <span>Page {offset / CONTACTS_PER_PAGE + 1}</span>
-                    <button onClick={() => setOffset(o => o + CONTACTS_PER_PAGE)} disabled={contacts.length < CONTACTS_PER_PAGE || loading}>
-                        Next
-                    </button>
-                </div>
-            )}
-        </div>
-    );
-};
-
-const AddContactForm = ({ onSubmit }: { onSubmit: (data: {Email: string, FirstName: string, LastName: string}) => void }) => {
-    const [email, setEmail] = useState('');
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        onSubmit({ Email: email, FirstName: firstName, LastName: lastName });
-    };
-
-    return (
-        <form onSubmit={handleSubmit} className="modal-form">
-            <div className="form-group">
-                <label htmlFor="email">Email Address</label>
-                <input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-            </div>
-            <div className="form-grid">
-                 <div className="form-group">
-                    <label htmlFor="firstName">First Name</label>
-                    <input id="firstName" type="text" value={firstName} onChange={e => setFirstName(e.target.value)} />
-                </div>
-                 <div className="form-group">
-                    <label htmlFor="lastName">Last Name</label>
-                    <input id="lastName" type="text" value={lastName} onChange={e => setLastName(e.target.value)} />
-                </div>
-            </div>
-            <button type="submit" className="btn btn-primary full-width">Add Contact</button>
-        </form>
-    );
-};
-
-
-const EmailListView = () => {
-    const { apiKey } = useAppContext();
-    const [actionStatus, setActionStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
-    const [newListName, setNewListName] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const { data: lists, loading, error, refetch } = useApiV4('/lists', apiKey, {}, { enabled: !!apiKey });
-
-    const handleCreateList = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newListName) return;
-        setIsSubmitting(true);
-        try {
-            await apiFetchV4('/lists', apiKey!, { method: 'POST', body: { ListName: newListName } });
-            setActionStatus({ type: 'success', message: `List "${newListName}" created.` });
-            setNewListName('');
-            refetch();
-        } catch (err: any) {
-            setActionStatus({ type: 'error', message: `Failed to create list: ${err.message}` });
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-    
-    const handleDeleteList = async (listName: string) => {
-        if (!window.confirm(`Are you sure you want to delete the list "${listName}"? This cannot be undone.`)) return;
-        try {
-            await apiFetchV4(`/lists/${encodeURIComponent(listName)}`, apiKey!, { method: 'DELETE' });
-            setActionStatus({ type: 'success', message: `List "${listName}" deleted.` });
-            refetch();
-        } catch (err: any) {
-            setActionStatus({ type: 'error', message: `Failed to delete list: ${err.message}` });
-        }
-    };
-
-    return (
-        <div>
-            <ActionStatus status={actionStatus} onDismiss={() => setActionStatus(null)} />
-            <div className="view-header">
-                <form className="create-list-form" onSubmit={handleCreateList}>
-                    <input
-                        type="text"
-                        placeholder="New list name..."
-                        value={newListName}
-                        onChange={e => setNewListName(e.target.value)}
-                        disabled={isSubmitting}
-                    />
-                    <button type="submit" className="btn btn-primary" disabled={!newListName || isSubmitting}>
-                        {isSubmitting ? <Loader /> : <><Icon path={ICONS.PLUS}/> Create List</>}
-                    </button>
                 </form>
             </div>
-            {loading && <CenteredMessage><Loader /></CenteredMessage>}
-            {error && <ErrorMessage error={error} />}
-            {!loading && lists?.length === 0 && <CenteredMessage>No email lists found. Create one above to get started.</CenteredMessage>}
-            <div className="card-grid list-grid">
-                {lists?.map((list: any) => (
-                    <div key={list.ListName} className="card list-card">
-                        <div className="list-card-header">
-                            <h3>{list.ListName}</h3>
-                        </div>
-                        <div className="list-card-body">
-                            <div className="list-card-stat">
-                                <span>Contacts</span>
-                                <strong>{list.Count?.toLocaleString() ?? '0'}</strong>
-                            </div>
-                        </div>
-                        <div className="list-card-footer">
-                             <span>Created: {formatDateForDisplay(list.DateAdded)}</span>
-                            <button className="btn-icon btn-icon-danger" onClick={() => handleDeleteList(list.ListName)} aria-label="Delete list">
-                                <Icon path={ICONS.DELETE} />
-                            </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
         </div>
     );
 };
 
-const SegmentsView = () => {
+
+const DomainsView = () => {
     const { apiKey } = useAppContext();
-    const [actionStatus, setActionStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    
-    const { data: segments, loading, error, refetch } = useApiV4('/segments', apiKey, {}, { enabled: !!apiKey });
+    const { data: domains, loading, error, refetch } = useApiV4('/domains', apiKey, {}, { enabled: !!apiKey });
+    const [newDomain, setNewDomain] = useState('');
+    const [isAdding, setIsAdding] = useState(false);
+    const [addStatus, setAddStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
 
-    const handleCreateSegment = async (segmentData: {Name: string, Rule: string}) => {
+    const handleAddDomain = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newDomain.trim()) return;
+        setIsAdding(true);
+        setAddStatus(null);
         try {
-            await apiFetchV4('/segments', apiKey!, { method: 'POST', body: segmentData });
-            setActionStatus({ type: 'success', message: `Segment "${segmentData.Name}" created.` });
-            setIsModalOpen(false);
+            await apiFetchV4('/domains', apiKey!, { method: 'POST', body: { Domain: newDomain } });
+            setAddStatus({ type: 'success', message: 'Domain added successfully! Verification may take a few moments.' });
+            setNewDomain('');
             refetch();
         } catch (err: any) {
-            setActionStatus({ type: 'error', message: `Failed to create segment: ${err.message}` });
-        }
-    };
-
-    const handleDeleteSegment = async (segmentName: string) => {
-        if (!window.confirm(`Are you sure you want to delete the segment "${segmentName}"?`)) return;
-        try {
-            await apiFetchV4(`/segments/${encodeURIComponent(segmentName)}`, apiKey!, { method: 'DELETE' });
-            setActionStatus({ type: 'success', message: `Segment "${segmentName}" deleted.` });
-            refetch();
-        } catch (err: any) {
-            setActionStatus({ type: 'error', message: `Failed to delete segment: ${err.message}` });
+            setAddStatus({ type: 'error', message: `Failed to add domain: ${err.message}` });
+        } finally {
+            setIsAdding(false);
         }
     };
 
     return (
         <div>
-            <ActionStatus status={actionStatus} onDismiss={() => setActionStatus(null)} />
             <div className="view-header">
-                <h3>Your Segments</h3>
-                <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-                    <Icon path={ICONS.PLUS} /> Create Segment
-                </button>
+                <h3>Your Sender Domains</h3>
+            </div>
+            <div className="form-container" style={{ maxWidth: '100%', marginBottom: '1.5rem', padding: '1.5rem' }}>
+                <form onSubmit={handleAddDomain} className="add-domain-form">
+                    <input 
+                        type="text" 
+                        value={newDomain} 
+                        onChange={e => setNewDomain(e.target.value)}
+                        placeholder="e.g., yourdomain.com"
+                        disabled={isAdding}
+                        required
+                    />
+                    <button type="submit" className="btn btn-primary" disabled={isAdding}>
+                        {isAdding ? <Loader /> : <> <Icon path={ICONS.PLUS} /> Add Domain </>}
+                    </button>
+                </form>
+                <ActionStatus status={addStatus} onDismiss={() => setAddStatus(null)} />
             </div>
 
-            <Modal title="Create New Segment" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-                <CreateSegmentForm onSubmit={handleCreateSegment} />
-            </Modal>
+            {loading ? <CenteredMessage><Loader /></CenteredMessage> : null}
+            {error ? <ErrorMessage error={error} /> : null}
 
-            {loading && <CenteredMessage><Loader /></CenteredMessage>}
-            {error && <ErrorMessage error={error} />}
-            {!loading && segments?.length === 0 && <CenteredMessage>No segments found. Create one to get started.</CenteredMessage>}
-            <div className="card-grid">
-                {segments?.map((segment: any) => (
-                    <div key={segment.Name} className="card segment-card">
-                        <div className="segment-card-header">
-                            <h3>{segment.Name}</h3>
-                            <button className="btn-icon btn-icon-danger" onClick={() => handleDeleteSegment(segment.Name)} aria-label="Delete segment">
-                                <Icon path={ICONS.DELETE} />
-                            </button>
-                        </div>
-                        <div className="segment-card-body">
-                             <label>Rule</label>
-                             <div className="segment-rule">{segment.Rule}</div>
-                        </div>
-                        <div className="segment-card-footer">
-                           <span>Contacts</span>
-                           <strong>{segment.ContactsCount?.toLocaleString() ?? 'N/A'}</strong>
-                        </div>
-                    </div>
-                ))}
-            </div>
+            {domains && (
+                <div className="card-grid domain-grid">
+                    {domains.map((domain: any) => <DomainCard key={domain.Domain} domain={domain} refetchDomains={refetch} />)}
+                </div>
+            )}
+             {!loading && domains?.length === 0 && (
+                <CenteredMessage>No domains found. Add one to get started.</CenteredMessage>
+            )}
         </div>
     );
 };
 
-const CreateSegmentForm = ({ onSubmit }: { onSubmit: (data: {Name: string, Rule: string}) => void }) => {
-    const [name, setName] = useState('');
-    const [rule, setRule] = useState('');
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        onSubmit({ Name: name, Rule: rule });
-    };
-
-    // A simple text area for the rule for now, as a full UI builder is very complex.
-    return (
-        <form onSubmit={handleSubmit} className="modal-form">
-            <div className="form-group">
-                <label htmlFor="segmentName">Segment Name</label>
-                <input id="segmentName" type="text" value={name} onChange={e => setName(e.target.value)} required />
-            </div>
-            <div className="form-group">
-                <label htmlFor="segmentRule">Rule</label>
-                <textarea id="segmentRule" value={rule} onChange={e => setRule(e.target.value)} required placeholder="Example: Country = 'Canada' AND ConsentTracked = 'true'"></textarea>
-                 <small style={{marginTop: '0.5rem', display: 'block'}}>
-                    Enter a rule using Elastic Email's segmentation query language.
-                </small>
-            </div>
-            <button type="submit" className="btn btn-primary full-width">Create Segment</button>
-        </form>
-    );
-}
-
-const SendEmailView = () => {
-    const { apiKey, user } = useAppContext();
-    const [isSending, setIsSending] = useState(false);
-    const [sendStatus, setSendStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
-    const [formData, setFormData] = useState({
-        subject: '',
-        from: user?.email || '',
-        fromName: '',
-        bodyHtml: '',
-        target: 'all', // all, list, segment
-        targetName: ''
-    });
-
-    const { data: lists } = useApiV4('/lists', apiKey);
-    const { data: segments } = useApiV4('/segments', apiKey);
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSending(true);
-        setSendStatus(null);
-        
-        const params: Record<string, any> = {
-            subject: formData.subject,
-            from: formData.from,
-            fromName: formData.fromName,
-            bodyHtml: formData.bodyHtml,
-        };
-
-        if(formData.target === 'all') {
-            params.to = 'All Contacts';
-        } else if (formData.target === 'list') {
-            params.listName = formData.targetName;
-        } else if (formData.target === 'segment') {
-            params.segmentName = formData.targetName;
-        }
-
+const DomainCard = ({ domain, refetchDomains }: { domain: any, refetchDomains: () => void }) => {
+    const { apiKey } = useAppContext();
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
+    
+    const handleDelete = async () => {
+        if (!window.confirm(`Are you sure you want to delete ${domain.Domain}? This cannot be undone.`)) return;
+        setIsDeleting(true);
         try {
-            await apiFetch('/email/send', apiKey!, { method: 'POST', params });
-            setSendStatus({ type: 'success', message: 'Email sent successfully!' });
-        } catch (err: any) {
-            setSendStatus({ type: 'error', message: `Failed to send email: ${err.message}` });
+            await apiFetchV4(`/domains/${domain.Domain}`, apiKey!, { method: 'DELETE' });
+            // Consider adding a success toast/notification here
+            refetchDomains();
+        } catch (err) {
+            // Consider adding an error toast/notification here
+            console.error(err);
         } finally {
-            setIsSending(false);
+            setIsDeleting(false);
         }
     };
+    
+    const handleVerify = async () => {
+        setIsVerifying(true);
+        try {
+            await apiFetchV4(`/domains/${domain.Domain}/verify`, apiKey!, { method: 'PUT' });
+            // Consider adding a success toast/notification here
+            refetchDomains();
+        } catch (err) {
+            // Consider adding an error toast/notification here
+            console.error(err);
+        } finally {
+            setIsVerifying(false);
+        }
+    }
 
     return (
-        <form className="form-container" onSubmit={handleSubmit}>
-            <div className="form-grid">
-                <div className="form-group full-width">
-                    <label htmlFor="subject">Subject</label>
-                    <input id="subject" name="subject" type="text" value={formData.subject} onChange={handleChange} required />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="from">From Email</label>
-                    <input id="from" name="from" type="email" value={formData.from} onChange={handleChange} required />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="fromName">From Name</label>
-                    <input id="fromName" name="fromName" type="text" value={formData.fromName} onChange={handleChange} />
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="target">Send To</label>
-                    <select id="target" name="target" value={formData.target} onChange={handleChange}>
-                        <option value="all">All Contacts</option>
-                        <option value="list">A List</option>
-                        <option value="segment">A Segment</option>
-                    </select>
-                </div>
-
-                <div className="form-group">
-                    {formData.target === 'list' && (
-                        <>
-                         <label htmlFor="targetName">Select List</label>
-                         <select id="targetName" name="targetName" value={formData.targetName} onChange={handleChange} required>
-                             <option value="">-- Choose a list --</option>
-                             {lists?.map((l: any) => <option key={l.ListName} value={l.ListName}>{l.ListName}</option>)}
-                         </select>
-                        </>
-                    )}
-                    {formData.target === 'segment' && (
-                        <>
-                        <label htmlFor="targetName">Select Segment</label>
-                        <select id="targetName" name="targetName" value={formData.targetName} onChange={handleChange} required>
-                            <option value="">-- Choose a segment --</option>
-                             {segments?.map((s: any) => <option key={s.Name} value={s.Name}>{s.Name}</option>)}
-                        </select>
-                        </>
-                    )}
-                </div>
-
-                <div className="form-group full-width">
-                    <label htmlFor="bodyHtml">Email Body (HTML)</label>
-                    <textarea id="bodyHtml" name="bodyHtml" value={formData.bodyHtml} onChange={handleChange} required></textarea>
-                </div>
-                <div className="form-actions">
-                    {sendStatus && <div className={`send-status-message ${sendStatus.type}`}>{sendStatus.message}</div>}
-                    <button type="submit" className="btn btn-primary" disabled={isSending}>
-                        {isSending ? <Loader /> : 'Send Email'}
+        <div className="card domain-card">
+            <div className="domain-card-header">
+                <h3>{domain.Domain}</h3>
+                <div className="action-buttons">
+                    <button onClick={handleVerify} className="btn-icon" title="Trigger re-verification" disabled={isVerifying}>
+                        {isVerifying ? <Loader/> : <Icon path={ICONS.VERIFY}/>}
+                    </button>
+                    <button onClick={handleDelete} className="btn-icon btn-icon-danger" title="Delete Domain" disabled={isDeleting}>
+                        {isDeleting ? <Loader/> : <Icon path={ICONS.DELETE}/>}
                     </button>
                 </div>
             </div>
-        </form>
+            <div className="domain-card-body">
+                <div className="domain-card-statuses">
+                    <div><span>SPF</span> <Badge text={domain.SpfStatus} type={domain.SpfStatus === 'Verified' ? 'success' : 'danger'} /></div>
+                    <div><span>DKIM</span> <Badge text={domain.DkimStatus} type={domain.DkimStatus === 'Verified' ? 'success' : 'danger'} /></div>
+                    <div><span>MX</span> <Badge text={domain.MxStatus} type={domain.MxStatus === 'Verified' ? 'success' : 'danger'} /></div>
+                    <div><span>Tracking</span> <Badge text={domain.TrackingStatus} type={domain.TrackingStatus === 'Verified' ? 'success' : 'danger'} /></div>
+                </div>
+            </div>
+            <div className="domain-card-footer" onClick={() => setIsExpanded(!isExpanded)}>
+                <span>DNS Details</span>
+                <Icon path={ICONS.CHEVRON_DOWN} className={isExpanded ? 'expanded' : ''} />
+            </div>
+            {isExpanded && <DomainVerificationDetails domainName={domain.Domain} />}
+        </div>
     );
 };
 
-const CampaignCardSkeleton = () => (
-    <div className="campaign-card">
-        <div className="campaign-card-header">
-            <div className="skeleton skeleton-title"></div>
-            <div className="skeleton skeleton-badge"></div>
-        </div>
-        <div className="campaign-card-body">
-            <div className="skeleton skeleton-text"></div>
-            <div className="skeleton skeleton-text"></div>
-        </div>
-        <div className="campaign-stats">
-            <div>
-                <span>Recipients</span>
-                <div className="skeleton skeleton-stat"></div>
-            </div>
-            <div>
-                <span>Opened</span>
-                <div className="skeleton skeleton-stat"></div>
-            </div>
-            <div>
-                <span>Clicked</span>
-                <div className="skeleton skeleton-stat"></div>
-            </div>
-        </div>
-        <div className="campaign-card-footer">
-            <div className="skeleton skeleton-text" style={{width: '40%'}}></div>
-        </div>
-    </div>
-);
-
-const CampaignsView = () => {
+const DomainVerificationDetails = ({ domainName }: { domainName: string }) => {
     const { apiKey } = useAppContext();
-    const { data: campaigns, loading, error } = useApiV4('/campaigns', apiKey, {}, { enabled: !!apiKey });
+    const { data: details, loading, error } = useApiV4(`/domains/${domainName}/verifications`, apiKey, {}, { enabled: !!domainName });
     
-    const getBadgeTypeForStatus = (statusName: string | undefined) => {
-        const lowerStatus = (statusName || '').toLowerCase();
-        if (lowerStatus === 'sent') return 'success';
-        if (lowerStatus === 'draft') return 'default';
-        if (lowerStatus === 'processing' || lowerStatus === 'sending') return 'info';
-        if (lowerStatus === 'cancelled') return 'warning';
-        return 'default';
-    }
+    if (loading) return <div className="expanded-loader"><Loader /></div>;
+    if (error) return <div className="expanded-loader"><ErrorMessage error={error} /></div>;
+    if (!details) return null;
 
-    if (loading) {
-        return (
-            <div className="campaign-grid">
-                {Array.from({ length: 6 }).map((_, index) => <CampaignCardSkeleton key={index} />)}
-            </div>
-        );
-    }
-    
-    if (error) return <ErrorMessage error={error} />;
-    
-    if (!campaigns || campaigns.length === 0) {
-        return <CenteredMessage>No campaigns found.</CenteredMessage>;
-    }
+    const dnsRecords = [
+        { label: "SPF Record", type: "TXT", value: details.Spf?.MailServerDomain, valid: details.Spf?.IsValid, name: '@ or your domain' },
+        { label: "DKIM Record", type: "TXT", value: details.Dkim?.Value, valid: details.Dkim?.IsValid, name: details.Dkim?.Host },
+        { label: "Tracking CNAME", type: "CNAME", value: details.Tracking?.Value, valid: details.Tracking?.IsValid, name: details.Tracking?.Host },
+        { label: "MX Record", type: "MX", value: details.Mx?.Value, valid: details.Mx?.IsValid, name: '@ or your domain' }
+    ];
 
     return (
-        <div className="campaign-grid">
-            {campaigns.map((campaign: any) => (
-                <div key={campaign.Name} className="campaign-card">
-                    <div className="campaign-card-header">
-                        <h3>{campaign.Name}</h3>
-                        <Badge text={campaign.Status?.Name ?? 'Unknown'} type={getBadgeTypeForStatus(campaign.Status?.Name)} />
-                    </div>
-                    <div className="campaign-card-body">
-                        <p className="campaign-subject">
-                            {campaign.Content?.[0]?.Subject || 'No Subject'}
-                        </p>
-                    </div>
-                    <div className="campaign-stats">
-                        <div>
-                            <span>Recipients</span>
-                            <strong>{campaign.Status?.Recipients?.toLocaleString() ?? '0'}</strong>
-                        </div>
-                        <div>
-                            <span>Opened</span>
-                            <strong>{campaign.Status?.Opened?.toLocaleString() ?? '0'}</strong>
-                        </div>
-                        <div>
-                            <span>Clicked</span>
-                            <strong>{campaign.Status?.Clicked?.toLocaleString() ?? '0'}</strong>
-                        </div>
-                    </div>
-                    <div className="campaign-card-footer">
-                       <span>Sent: {formatDateForDisplay(campaign.Content?.[0]?.DateAdded)}</span>
-                    </div>
+        <div className="domain-card-expanded-content">
+            {dnsRecords.map((record, index) => record.value && (
+                <div key={index} className="dns-record">
+                    <label>{record.label} ({record.valid ? "Verified" : "Not Verified"})</label>
+                    <div className="dns-record-name">Type: <span>{record.type}</span> | Name: <span>{record.name}</span></div>
+                    <input type="text" readOnly value={record.value} onClick={e => (e.target as HTMLInputElement).select()} />
                 </div>
             ))}
         </div>
     );
 };
 
-const DNS_RECORDS_CONFIG = {
-    SPF: {
-        type: 'TXT',
-        name: (domain: string) => domain,
-        expectedValue: 'v=spf1 a mx include:mailzila.com ~all',
-        check: (data: string) => data.includes('v=spf1') && data.includes('include:mailzila.com'),
-        host: '@ or your domain',
-    },
-    DKIM: {
-        type: 'TXT',
-        name: (domain: string) => `api._domainkey.${domain}`,
-        expectedValue: 'k=rsa;t=s;p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCbmGbQMzYeMvxwtNQoXN0waGYaciuKx8mtMh5czguT4EZlJXuCt6V+l56mmt3t68FEX5JJ0q4ijG71BGoFRkl87uJi7LrQt1ZZmZCvrEII0YO4mp8sDLXC8g1aUAoi8TJgxq2MJqCaMyj5kAm3Fdy2tzftPCV/lbdiJqmBnWKjtwIDAQAB',
-        check: (data: string) => data.includes('k=rsa;') && data.includes('p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCbmGbQMzYeMvxwtNQoXN0waGYaciuKx8mtMh5czguT4EZlJXuCt6V+l56mmt3t68FEX5JJ0q4ijG71BGoFRkl87uJi7LrQt1ZZmZCvrEII0YO4mp8sDLXC8g1aUAoi8TJgxq2MJqCaMyj5kAm3Fdy2tzftPCV/lbdiJqmBnWKjtwIDAQAB'),
-        host: 'api._domainkey',
-    },
-    Tracking: {
-        type: 'CNAME',
-        name: (domain: string) => `tracking.${domain}`,
-        expectedValue: 'app.mailzila.com',
-        check: (data: string) => data.includes('app.mailzila.com'),
-        host: 'tracking',
-    },
-    DMARC: {
-        type: 'TXT',
-        name: (domain: string) => `_dmarc.${domain}`,
-        expectedValue: 'v=DMARC1;p=none;pct=10;aspf=r;adkim=r;',
-        check: (data: string) => data.includes('v=DMARC1'),
-        host: '_dmarc',
-    },
-};
-
-type VerificationStatus = 'idle' | 'checking' | 'verified' | 'failed';
-
-const VerificationStatusIndicator = ({ status }: { status: VerificationStatus }) => {
-    switch (status) {
-        case 'checking':
-            return <span className="verification-status status-checking"><Icon path={ICONS.LOADING_SPINNER} className="icon-spinner" /> Checking...</span>;
-        case 'verified':
-            return <span className="verification-status status-verified"><Icon path={ICONS.CHECK} className="icon-success" /> Verified</span>;
-        case 'failed':
-            return <span className="verification-status status-failed"><Icon path={ICONS.X_CIRCLE} className="icon-danger" /> Not Verified</span>;
-        default:
-            return null;
-    }
-};
-
-const DomainVerificationChecker = ({ domainName }: { domainName: string }) => {
-    const [statuses, setStatuses] = useState<Record<string, { status: VerificationStatus }>>(
-      Object.keys(DNS_RECORDS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: { status: 'idle' } }), {})
-    );
-    const [isChecking, setIsChecking] = useState(false);
-
-    const checkAllDns = async () => {
-        setIsChecking(true);
-        setStatuses(prev => Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: { status: 'checking' } }), {}));
-
-        for (const [key, config] of Object.entries(DNS_RECORDS_CONFIG)) {
-            try {
-                const response = await fetch(`https://dns.google/resolve?name=${config.name(domainName)}&type=${config.type}`);
-                if (!response.ok) {
-                    throw new Error(`DNS lookup failed with status ${response.status}`);
-                }
-                const result = await response.json();
-                
-                let isVerified = false;
-                if (result.Status === 0 && result.Answer) {
-                    const foundRecord = result.Answer.find((ans: any) => config.check(ans.data.replace(/"/g, '')));
-                    if (foundRecord) {
-                        isVerified = true;
-                    }
-                }
-                setStatuses(prev => ({ ...prev, [key]: { status: isVerified ? 'verified' : 'failed' } }));
-
-            } catch (error) {
-                console.error(`Error checking ${key}:`, error);
-                setStatuses(prev => ({ ...prev, [key]: { status: 'failed' } }));
-            }
-        }
-        setIsChecking(false);
-    };
-
-    return (
-        <div className="domain-verification-checker">
-            <button className="btn check-all-btn" onClick={checkAllDns} disabled={isChecking}>
-                {isChecking ? <Loader /> : <Icon path={ICONS.VERIFY} />}
-                {isChecking ? 'Checking DNS...' : 'Check DNS Status'}
-            </button>
-            <div className="dns-records-list">
-                {Object.entries(DNS_RECORDS_CONFIG).map(([key, config]) => (
-                    <div className="dns-record-item" key={key}>
-                        <div className="dns-record-item-header">
-                            <h4>{key} Record</h4>
-                            <VerificationStatusIndicator status={statuses[key]?.status} />
-                        </div>
-                        <div className="dns-record-details">
-                            <div className="detail"><strong>Host:</strong> <code>{config.host}</code></div>
-                            <div className="detail"><strong>Type:</strong> <code>{config.type}</code></div>
-                            <div className="detail"><strong>Value:</strong> <code>{config.expectedValue}</code></div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};
-
-const DomainsView = () => {
+const EmailListsView = () => {
     const { apiKey } = useAppContext();
-    const [actionStatus, setActionStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
-    const [newDomain, setNewDomain] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [expandedDomain, setExpandedDomain] = useState<string | null>(null);
-
-    const { data, loading, error, refetch } = useApiV4('/domains', apiKey, {}, { enabled: !!apiKey });
-
-    const handleAddDomain = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newDomain) return;
-        setIsSubmitting(true);
-        try {
-            await apiFetchV4('/domains', apiKey!, { method: 'POST', body: { Domain: newDomain } });
-            setActionStatus({ type: 'success', message: `Domain "${newDomain}" added. Please add DNS records and verify.` });
-            setNewDomain('');
-            setExpandedDomain(null);
-            refetch();
-        } catch (err: any) {
-            setActionStatus({ type: 'error', message: `Failed to add domain: ${err.message}` });
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+    const { data: lists, loading, error, refetch } = useApiV4('/lists', apiKey, {}, { enabled: !!apiKey });
+    const [isModalOpen, setIsModalOpen] = useState(false);
     
-    const handleDeleteDomain = async (domainName: string) => {
-        if (!window.confirm(`Are you sure you want to delete "${domainName}"?`)) return;
-        try {
-            await apiFetchV4(`/domains/${encodeURIComponent(domainName)}`, apiKey!, { method: 'DELETE' });
-            setActionStatus({ type: 'success', message: `Domain "${domainName}" deleted.` });
-            setExpandedDomain(null);
-            refetch();
-        } catch (err: any) {
-            setActionStatus({ type: 'error', message: `Failed to delete domain: ${err.message}` });
-        }
-    };
-    
-    const domainsList = Array.isArray(data) ? data : (data && Array.isArray(data.Data)) ? data.Data : [];
-    const isNotFoundError = error && (error.message.includes('Not Found') || error.message.includes('not found'));
-    const showNoDomainsMessage = !loading && !error && domainsList.length === 0;
-
     return (
         <div>
-            <ActionStatus status={actionStatus} onDismiss={() => setActionStatus(null)} />
-             <div className="view-header">
-                <form className="add-domain-form" onSubmit={handleAddDomain}>
-                    <input
-                        type="text"
-                        placeholder="example.com"
-                        value={newDomain}
-                        onChange={e => setNewDomain(e.target.value)}
-                        disabled={isSubmitting}
-                    />
-                    <button type="submit" className="btn btn-primary" disabled={!newDomain || isSubmitting}>
-                        {isSubmitting ? <Loader /> : <><Icon path={ICONS.PLUS}/> Add Domain</>}
-                    </button>
-                </form>
+            <div className="view-header">
+                <h3>Your Contact Lists</h3>
+                <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+                    <Icon path={ICONS.PLUS} /> Create New List
+                </button>
             </div>
-            {loading && <CenteredMessage><Loader /></CenteredMessage>}
-            {error && !isNotFoundError && <ErrorMessage error={error} />}
-            {showNoDomainsMessage && <CenteredMessage>No domains found. Add one to start sending.</CenteredMessage>}
-            
-            {domainsList.length > 0 && <div className="card-grid domain-grid">
-                {domainsList.map((domain: any) => {
-                    const domainName = domain.Domain || domain.domain;
-                    if (!domainName) return null;
-                    
-                    const isSpfVerified = String(domain.Spf || domain.spf).toLowerCase() === 'true';
-                    const isDkimVerified = String(domain.Dkim || domain.dkim).toLowerCase() === 'true';
-                    const isMxVerified = String(domain.MX || domain.mx).toLowerCase() === 'true';
-                    const trackingStatus = domain.TrackingStatus || domain.trackingstatus;
-                    const isTrackingVerified = String(trackingStatus).toLowerCase() === 'validated';
-                    const isExpanded = expandedDomain === domainName;
 
-                    return (
-                        <div key={domainName} className="card domain-card">
-                            <div className="domain-card-header">
-                                <h3>{domainName}</h3>
-                                <div className="action-buttons">
-                                    <button className="btn-icon btn-icon-danger" onClick={() => handleDeleteDomain(domainName)} aria-label={`Delete ${domainName}`}>
-                                        <Icon path={ICONS.DELETE} />
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="domain-card-body">
-                                <div className="domain-card-statuses">
-                                    <div><span>SPF</span> <Badge text={isSpfVerified ? 'Verified' : 'Missing'} type={isSpfVerified ? 'success' : 'warning'} /></div>
-                                    <div><span>DKIM</span> <Badge text={isDkimVerified ? 'Verified' : 'Missing'} type={isDkimVerified ? 'success' : 'warning'} /></div>
-                                    <div><span>Tracking</span> <Badge text={isTrackingVerified ? 'Verified' : 'Missing'} type={isTrackingVerified ? 'success' : 'warning'} /></div>
-                                    <div><span>MX</span> <Badge text={isMxVerified ? 'Verified' : 'Missing'} type={isMxVerified ? 'success' : 'warning'} /></div>
-                                </div>
-                            </div>
-                            <div className="domain-card-footer" onClick={() => setExpandedDomain(d => d === domainName ? null : domainName)} role="button" aria-expanded={isExpanded}>
-                                <span>Show DNS & Verify</span>
-                                <Icon path={ICONS.CHEVRON_DOWN} className={isExpanded ? 'expanded' : ''} />
-                            </div>
-                            {isExpanded && <DomainVerificationChecker domainName={domainName} />}
-                        </div>
-                    )
-                })}
-            </div>}
+            {loading && <CenteredMessage><Loader /></CenteredMessage>}
+            {error && <ErrorMessage error={error} />}
+
+            {!loading && lists && lists.length > 0 && (
+                <div className="card-grid list-grid">
+                    {lists.map((list: any) => (
+                        <ListCard key={list.ListName} list={list} refetchLists={refetch} />
+                    ))}
+                </div>
+            )}
+
+            {!loading && (!lists || lists.length === 0) && (
+                <CenteredMessage>
+                    You haven't created any contact lists yet.
+                </CenteredMessage>
+            )}
+
+            <CreateListModal 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onListCreated={() => {
+                    refetch();
+                    setIsModalOpen(false);
+                }}
+            />
         </div>
     );
 };
 
-
-const SmtpView = () => {
-    const { apiKey, user } = useAppContext();
-    if (!user) return <CenteredMessage><Loader /></CenteredMessage>;
-
-    const smtpDetails = {
-        server: 'smtp.elasticemail.com',
-        ports: '25, 2525, 587, 465 (SSL)'
+const ListCard = ({ list, refetchLists }: { list: any; refetchLists: () => void }) => {
+    const { apiKey } = useAppContext();
+    const [isDeleting, setIsDeleting] = useState(false);
+    
+    const handleDelete = async () => {
+        if (!window.confirm(`Are you sure you want to delete the list "${list.ListName}"? All contacts in this list will be removed.`)) return;
+        setIsDeleting(true);
+        try {
+            await apiFetchV4(`/lists/${list.ListName}`, apiKey!, { method: 'DELETE' });
+            refetchLists();
+        } catch (err: any) {
+            alert(`Failed to delete list: ${err.message}`);
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     return (
-        <div className="card-grid smtp-grid">
-            <div className="card smtp-card">
-                <div className="smtp-card-header">
-                    <h3>SMTP Credentials</h3>
+        <div className="card list-card">
+            <div className="list-card-header">
+                <h3>{list.ListName}</h3>
+            </div>
+            <div className="list-card-body">
+                <div className="list-card-stat">
+                    <span>Contacts</span>
+                    <strong>{list.ContactsCount?.toLocaleString() ?? 0}</strong>
                 </div>
-                <div className="smtp-card-body">
-                    <div className="smtp-detail-item"><label>Server</label> <strong>{smtpDetails.server}</strong></div>
-                    <div className="smtp-detail-item"><label>Ports</label> <strong>{smtpDetails.ports}</strong></div>
-                    <div className="smtp-detail-item full-span"><label>Username</label> <strong className="monospace">{user.email}</strong></div>
-                    <div className="smtp-detail-item full-span">
-                        <label>Password</label>
-                        <div className="secret-value-wrapper">
-                            <input type="password" value={apiKey!} readOnly />
-                            <button className="btn" onClick={() => navigator.clipboard.writeText(apiKey!)}>Copy</button>
-                        </div>
-                        <small style={{display: 'block', marginTop: '0.5rem'}}>Your password is your API Key.</small>
-                    </div>
+            </div>
+            <div className="list-card-footer">
+                <span>Created: {formatDateForDisplay(list.DateAdded)}</span>
+                <div className="action-buttons">
+                    <button onClick={handleDelete} className="btn-icon btn-icon-danger" title="Delete List" disabled={isDeleting}>
+                        {isDeleting ? <Loader/> : <Icon path={ICONS.DELETE}/>}
+                    </button>
                 </div>
             </div>
         </div>
@@ -1646,279 +846,387 @@ const SmtpView = () => {
 };
 
 
-// --- END OF IMPLEMENTED VIEWS ---
-
-
-// --- Main App & Auth Flow ---
-const AuthView = () => {
-    const { login, register } = useAppContext();
-    const [mode, setMode] = useState<'login' | 'register'>('login');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [form, setForm] = useState({
-        email: '',
-        password: '',
-        first_name: '',
-        last_name: ''
-    });
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    };
+const CreateListModal = ({ isOpen, onClose, onListCreated }: { isOpen: boolean; onClose: () => void; onListCreated: () => void; }) => {
+    const { apiKey } = useAppContext();
+    const [listName, setListName] = useState('');
+    const [allowUnsubscribe, setAllowUnsubscribe] = useState(true);
+    const [isCreating, setIsCreating] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
-        setError('');
+        setIsCreating(true);
+        setError(null);
         try {
-            if (mode === 'login') {
-                await login({ email: form.email, password: form.password });
-            } else {
-                await register({
-                    email: form.email,
-                    password: form.password,
-                    first_name: form.first_name,
-                    last_name: form.last_name,
-                });
-            }
+            const newList = {
+                ListName: listName,
+                AllowUnsubscribe: allowUnsubscribe
+            };
+            await apiFetchV4('/lists', apiKey!, { method: 'POST', body: newList });
+            onListCreated();
+            setListName('');
         } catch (err: any) {
-            let errorMessage = err.message || 'An unknown error occurred.';
-            if (err instanceof TypeError && err.message === 'Failed to fetch') {
-                errorMessage = 'Could not connect to the server. This is often due to a CORS configuration issue on the server or a network problem. Please contact the administrator.';
-            }
-            setError(errorMessage);
+            setError(err.message);
         } finally {
-            setIsLoading(false);
+            setIsCreating(false);
         }
     };
     
-    const toggleMode = () => {
-        setMode(prev => prev === 'login' ? 'register' : 'login');
-        setError('');
-    };
-
     return (
-        <div className="auth-container">
-            <div className="auth-box">
-                <h1 className="logo-font">MegaMail</h1>
-                <p>{mode === 'login' ? 'Sign in to your account' : 'Create a new account'}</p>
-                <form className="auth-form" onSubmit={handleSubmit}>
-                    {mode === 'register' && (
-                        <>
-                             <div className="form-group">
-                                <input name="first_name" type="text" value={form.first_name} onChange={handleInputChange} placeholder="First Name" required disabled={isLoading} />
-                            </div>
-                             <div className="form-group">
-                                <input name="last_name" type="text" value={form.last_name} onChange={handleInputChange} placeholder="Last Name" required disabled={isLoading} />
-                            </div>
-                        </>
-                    )}
-                    <div className="form-group">
-                        <input name="email" type="email" value={form.email} onChange={handleInputChange} placeholder="Email Address" required disabled={isLoading} />
-                    </div>
-                    <div className="form-group">
-                        <input name="password" type="password" value={form.password} onChange={handleInputChange} placeholder="Password" required disabled={isLoading} />
-                    </div>
-                    
-                    {error && <div className="action-status error">{error}</div>}
-                    
-                    <button type="submit" className="btn btn-primary" disabled={isLoading}>
-                        {isLoading && <Loader />}
-                        <span>{isLoading ? 'Processing...' : (mode === 'login' ? 'Login' : 'Create Account')}</span>
-                    </button>
-                </form>
-                <button onClick={toggleMode} className="toggle-auth-btn">
-                    {mode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
-                </button>
-            </div>
-        </div>
-    );
-};
-
-const ApiKeySetupView = () => {
-    const { updateUserApiKey } = useAppContext();
-    const [apiKey, setApiKey] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError('');
-        try {
-            await apiFetch('/account/load', apiKey); // Verify key first
-            await updateUserApiKey(apiKey);
-        } catch (err: any) {
-            let errorMessage = err.message || "Invalid API key or failed to save.";
-            if (err instanceof TypeError && err.message === 'Failed to fetch') {
-                errorMessage = 'Could not connect to the API server. Please check your network connection and try again.';
-            }
-            setError(errorMessage);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <div className="auth-container">
-            <div className="auth-box">
-                <h1 className="logo-font">One More Step</h1>
-                <p>Please provide your Elastic Email API key to continue.</p>
-                <form className="auth-form" onSubmit={handleSubmit}>
-                    <div className="form-group">
+        <Modal isOpen={isOpen} onClose={onClose} title="Create a New Contact List">
+            <form onSubmit={handleSubmit} className="modal-form">
+                <div className="form-group">
+                    <label htmlFor="listName">List Name</label>
+                    <input
+                        id="listName"
+                        type="text"
+                        value={listName}
+                        onChange={(e) => setListName(e.target.value)}
+                        placeholder="e.g., 'Monthly Newsletter Subscribers'"
+                        required
+                    />
+                </div>
+                <div className="form-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <input
-                            type="password"
-                            value={apiKey}
-                            onChange={(e) => setApiKey(e.target.value)}
-                            placeholder="Your Elastic Email API Key"
-                            required
-                            disabled={isLoading}
+                            type="checkbox"
+                            checked={allowUnsubscribe}
+                            onChange={(e) => setAllowUnsubscribe(e.target.checked)}
                         />
-                    </div>
-                     {error && <div className="action-status error">{error}</div>}
-                    <button type="submit" className="btn btn-primary" disabled={isLoading}>
-                        {isLoading && <Loader />}
-                        <span>{isLoading ? 'Verifying & Saving...' : 'Save and Continue'}</span>
-                    </button>
-                </form>
-            </div>
-        </div>
+                        Allow contacts to unsubscribe from this list
+                    </label>
+                </div>
+                {error && <div className="action-status error">{error}</div>}
+                <button type="submit" className="btn btn-primary full-width" disabled={isCreating}>
+                    {isCreating ? <Loader /> : 'Create List'}
+                </button>
+            </form>
+        </Modal>
     );
 };
 
 
-const views: { [key: string]: React.ComponentType<any> } = {
-    Dashboard: DashboardView,
-    Statistics: StatisticsView,
-    Account: AccountView,
-    Contacts: ContactsView,
-    'Email Lists': EmailListView,
-    Segments: SegmentsView,
-    'Send Email': SendEmailView,
-    Campaigns: CampaignsView,
-    Domains: DomainsView,
-    SMTP: SmtpView,
-    'Buy Credits': BuyCreditsView
-};
-
-const getIconForView = (viewName: string) => {
-    const normalizedName = viewName.toUpperCase().replace(/\s+/g, '_');
-    return (ICONS as Record<string, string>)[normalizedName] || ICONS.DEFAULT;
+// Main App Structure
+const App = () => {
+    return (
+        <AppProvider>
+            <AppContent />
+        </AppProvider>
+    );
 };
 
 const AppContent = () => {
-    const { authLoading, isAuthenticated, apiKey, loadingAccount } = useAppContext();
-    const [view, setView] = useState('Dashboard');
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    
-    useEffect(() => {
-        setMobileMenuOpen(false);
-    }, [view]);
+    const { isAuthenticated, authLoading, apiKey } = useAppContext();
 
     if (authLoading) {
-      return (
-        <div className="auth-container">
-          <Loader />
-        </div>
-      );
-    }
-    
-    if (!isAuthenticated) {
-        return <AuthView />;
-    }
-    
-    if (!apiKey) {
-        return <ApiKeySetupView />;
-    }
-
-    if (loadingAccount) {
-         return (
+        return (
             <div className="auth-container">
                 <Loader />
             </div>
         );
     }
+    
+    if (!isAuthenticated) {
+        return <AuthView />;
+    }
 
-    const renderView = () => {
-        const Component = views[view] || DashboardView;
-        return <Component setView={setView} />;
-    };
+    if (!apiKey) {
+        return <ApiKeySetupView />;
+    }
 
+    return <MainLayout />;
+};
+
+const AuthView = () => {
+    const [isLogin, setIsLogin] = useState(true);
     return (
-        <div className={`app-container ${mobileMenuOpen ? 'mobile-menu-open' : ''}`}>
-            <Sidebar view={view} setView={setView} />
-            <div className="mobile-menu-overlay" onClick={() => setMobileMenuOpen(false)}></div>
-            <main className="main-wrapper">
-                <MobileHeader
-                    viewTitle={view}
-                    onMenuClick={() => setMobileMenuOpen(true)}
-                />
-                <div className="content">
-                    <div className="content-header">
-                        <h2>{view}</h2>
-                    </div>
-                    {renderView()}
-                </div>
-            </main>
+        <div className="auth-container">
+            <div className="auth-box">
+                <h1>{isLogin ? 'Welcome Back!' : 'Create an Account'}</h1>
+                <p>{isLogin ? 'Sign in to manage your email marketing.' : 'Get started in just a few clicks.'}</p>
+                {isLogin ? <LoginForm /> : <RegisterForm />}
+                <button onClick={() => setIsLogin(!isLogin)} className="toggle-auth-btn">
+                    {isLogin ? 'Need an account? Sign up' : 'Already have an account? Sign in'}
+                </button>
+            </div>
         </div>
     );
 };
 
-const Sidebar = ({ view, setView }: { view: string, setView: (view: string) => void }) => {
-    const { logout } = useAppContext();
-    const mainNavItems = ['Dashboard', 'Statistics', 'Contacts', 'Email Lists', 'Segments', 'Send Email', 'Campaigns', 'Domains', 'SMTP'];
+const handleAuthError = (err: any): ReactNode => {
+    if (err instanceof TypeError && err.message === 'Failed to fetch') {
+        return (
+            <>
+                Network error: Failed to connect to the authentication server. 
+                <small>This is often a CORS issue. Please ensure the server at <code>{DIRECTUS_URL}</code> is running and configured to accept requests from this origin.</small>
+            </>
+        );
+    }
+    return err.message;
+};
 
+const LoginForm = () => {
+    const { login } = useAppContext();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<ReactNode | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+        try {
+            await login({ email, password });
+        } catch (err: any) {
+            setError(handleAuthError(err));
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    return (
+        <form onSubmit={handleSubmit} className="auth-form">
+            {error && <ActionStatus status={{type: 'error', message: error}} onDismiss={() => setError(null)} />}
+            <div className="form-group">
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" required />
+            </div>
+            <div className="form-group">
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required />
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? <Loader /> : 'Sign In'}
+            </button>
+        </form>
+    );
+};
+
+const RegisterForm = () => {
+    const { register } = useAppContext();
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<ReactNode | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+        try {
+            await register({ first_name: firstName, last_name: lastName, email, password, role: 'YOUR_DEFAULT_USER_ROLE_ID' });
+        } catch (err: any) {
+             setError(handleAuthError(err));
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    return (
+        <form onSubmit={handleSubmit} className="auth-form">
+            {error && <ActionStatus status={{type: 'error', message: error}} onDismiss={() => setError(null)} />}
+             <div className="form-group">
+                <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First Name" required />
+            </div>
+             <div className="form-group">
+                <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last Name" required />
+            </div>
+            <div className="form-group">
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" required />
+            </div>
+            <div className="form-group">
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required />
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? <Loader /> : 'Create Account'}
+            </button>
+        </form>
+    );
+};
+
+
+const ApiKeySetupView = () => {
+    const { updateUserApiKey } = useAppContext();
+    const [apiKey, setApiKey] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+        try {
+            await updateUserApiKey(apiKey);
+        } catch (err: any) {
+            setError(`Failed to save key: ${err.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    return (
+        <div className="auth-container">
+            <div className="auth-box">
+                <h1>One Last Step</h1>
+                <p>Please provide your Elastic Email API key to continue.</p>
+                <form onSubmit={handleSubmit} className="auth-form">
+                    {error && <ActionStatus status={{type: 'error', message: error}} onDismiss={() => setError(null)} />}
+                    <div className="form-group">
+                        <input 
+                            type="text" 
+                            value={apiKey} 
+                            onChange={e => setApiKey(e.target.value)} 
+                            placeholder="Your Elastic Email API Key" 
+                            required 
+                        />
+                    </div>
+                    <button type="submit" className="btn btn-primary" disabled={loading}>
+                        {loading ? <Loader /> : 'Save and Continue'}
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+
+const MainLayout = () => {
+    const [activeView, setActiveView] = useState('dashboard');
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    
+    const views: { [key: string]: { component: ReactNode; title: string; description: string, icon: string } } = {
+        dashboard: { component: <DashboardView setActiveView={setActiveView} />, title: 'Dashboard', description: 'Overview of your email marketing performance.', icon: ICONS.DASHBOARD },
+        account: { component: <AccountView />, title: 'My Profile & Settings', description: 'View and manage your account details.', icon: ICONS.ACCOUNT },
+        domains: { component: <DomainsView />, title: 'Sender Domains', description: 'Manage and verify your sending domains.', icon: ICONS.DOMAINS },
+        lists: { component: <EmailListsView />, title: 'Contact Lists', description: 'Manage your audience with contact lists.', icon: ICONS.EMAIL_LIST },
+        statistics: { component: <StatisticsView />, title: 'Statistics', description: 'Analyze your email campaign statistics.', icon: ICONS.STATS },
+    };
+
+    const currentView = views[activeView] || views.dashboard;
+    
+    return (
+        <div className={`app-container ${isMenuOpen ? 'mobile-menu-open' : ''}`}>
+            {isMenuOpen && <div className="mobile-menu-overlay" onClick={() => setIsMenuOpen(false)}></div>}
+            <Sidebar activeView={activeView} setActiveView={(view) => { setActiveView(view); setIsMenuOpen(false); }} views={views} />
+            <div className="main-wrapper">
+                 <MobileHeader onMenuClick={() => setIsMenuOpen(!isMenuOpen)} title={currentView.title} />
+                <main className="content">
+                    <div className="content-header">
+                        <h2>{currentView.title}</h2>
+                        <p>{currentView.description}</p>
+                    </div>
+                     {currentView.component}
+                </main>
+            </div>
+        </div>
+    );
+};
+
+const MobileHeader = ({ onMenuClick, title }: { onMenuClick: () => void, title: string }) => {
+    return (
+        <header className="mobile-header">
+            <button onClick={onMenuClick} className="mobile-menu-toggle" aria-label="Open menu">
+                <Icon path={ICONS.MENU} />
+            </button>
+            <h1 className="mobile-header-title">{title}</h1>
+            <div className="mobile-header-placeholder"></div>
+        </header>
+    );
+};
+
+const Sidebar = ({ activeView, setActiveView, views }: { activeView: string; setActiveView: (view: string) => void; views: { [key: string]: { icon: string; title: string; } } }) => {
+    const { logout } = useAppContext();
+    
     return (
         <aside className="sidebar">
             <div>
-                <div className="sidebar-header logo-font">MegaMail</div>
+                <h1 className="sidebar-header logo-font">MegaMail</h1>
                 <nav className="nav">
-                    {mainNavItems.map(name => (
-                        <button key={name} onClick={() => setView(name)} className={`nav-btn ${view === name ? 'active' : ''}`}>
-                            <Icon path={getIconForView(name)} />
-                            <span>{name}</span>
+                    {Object.entries(views).map(([key, view]) => (
+                        <button
+                            key={key}
+                            className={`nav-btn ${activeView === key ? 'active' : ''}`}
+                            onClick={() => setActiveView(key)}
+                        >
+                            <Icon path={view.icon} />
+                            {view.title}
                         </button>
                     ))}
                 </nav>
             </div>
             <div className="sidebar-footer-nav">
-                 <button onClick={() => setView('Account')} className={`nav-btn ${view === 'Account' ? 'active' : ''}`}>
-                    <Icon path={ICONS.ACCOUNT} />
-                    <span>User Profile</span>
-                </button>
-                <button onClick={() => setView('Buy Credits')} className={`nav-btn ${view === 'Buy Credits' ? 'active' : ''}`}>
-                    <Icon path={ICONS.CREDIT_CARD} />
-                    <span>Buy Credits</span>
-                </button>
-                <button onClick={() => logout()} className="nav-btn logout-btn">
-                    <Icon path={ICONS.LOGOUT} />
-                    <span>Log Out</span>
+                <button onClick={logout} className="nav-btn logout-btn">
+                     <Icon path={ICONS.LOGOUT} />
+                    Logout
                 </button>
             </div>
         </aside>
     );
-}
+};
 
-const MobileHeader = ({ viewTitle, onMenuClick }: { viewTitle: string, onMenuClick: () => void }) => {
+const DashboardView = ({ setActiveView }: { setActiveView: (view: string) => void }) => {
+    const { user, accountData, loadingAccount } = useAppContext();
+    
+    const navItems = [
+        { id: 'statistics', title: 'View Statistics', description: 'Dive deep into your email performance metrics.', icon: ICONS.STATS },
+        { id: 'domains', title: 'Manage Domains', description: 'Add, verify, and track your sending domains.', icon: ICONS.DOMAINS },
+        { id: 'lists', title: 'Organize Contacts', description: 'Create and manage your audience lists.', icon: ICONS.EMAIL_LIST },
+        { id: 'account', title: 'Update Profile', description: 'Check your account status and settings.', icon: ICONS.ACCOUNT },
+    ];
+
     return (
-        <header className="mobile-header">
-            <button className="mobile-menu-toggle" onClick={onMenuClick} aria-label="Open menu">
-                <Icon path={ICONS.MENU} />
-            </button>
-            <h1 className="mobile-header-title">{viewTitle}</h1>
-            <div className="mobile-header-placeholder"></div>
-        </header>
+        <div className="dashboard-container">
+            <header className="dashboard-header">
+                <div>
+                    <h2>Welcome back, {user?.first_name}!</h2>
+                    <p>Here's a quick overview of your account. What would you like to do today?</p>
+                </div>
+            </header>
+
+            {loadingAccount ? <CenteredMessage><Loader/></CenteredMessage> :
+                <div className="dashboard-stats-grid">
+                     <AccountDataCard title="Email Credits" iconPath={ICONS.CREDIT_CARD}>
+                        {accountData?.emailcredits?.toLocaleString() ?? '0'}
+                    </AccountDataCard>
+                    <AccountDataCard title="Reputation" iconPath={ICONS.TRENDING_UP}>
+                         {accountData?.reputation ? (
+                            <>
+                                <span className={`reputation-score ${accountData.reputation > 80 ? 'good' : accountData.reputation > 60 ? 'medium' : 'bad'}`}>
+                                    {accountData.reputation.toFixed(2)}%
+                                </span>
+                                <span className="reputation-text">{accountData.reputation > 80 ? 'Excellent' : accountData.reputation > 60 ? 'Good' : 'Needs Improvement'}</span>
+                            </>
+                        ) : 'N/A'}
+                    </AccountDataCard>
+                     <AccountDataCard title="Contacts" iconPath={ICONS.CONTACTS}>
+                        {accountData?.contactscount?.toLocaleString() ?? '0'}
+                    </AccountDataCard>
+                </div>
+            }
+
+            <section>
+                 <div className="dashboard-section-header">
+                    <h3>Quick Actions</h3>
+                 </div>
+                 <div className="dashboard-nav-grid" style={{marginTop: '1.5rem'}}>
+                    {navItems.map(item => (
+                        <div key={item.id} className="card nav-card" onClick={() => setActiveView(item.id)}>
+                             <Icon path={item.icon} className="nav-card-icon" />
+                             <h4 className="nav-card-title">{item.title}</h4>
+                             <p className="nav-card-description">{item.description}</p>
+                        </div>
+                    ))}
+                 </div>
+            </section>
+            
+            <footer className="dashboard-branding-footer">
+                <p>Powered by <strong>MegaMail</strong></p>
+            </footer>
+        </div>
     );
 }
 
-const App = () => (
-    <AppProvider>
-        <AppContent />
-    </AppProvider>
-);
 
-const container = document.getElementById('root');
-if (container) {
-    const root = createRoot(container);
-    root.render(<App />);
-}
+const root = createRoot(document.getElementById('root')!);
+root.render(<App />);

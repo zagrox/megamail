@@ -133,6 +133,11 @@ const directusFetch = async (endpoint: string, options: RequestInit = {}) => {
     }
 
     const response = await fetch(url, { ...options, headers });
+    
+    if (response.status === 204) { // No Content
+        return {};
+    }
+
     const data = await response.json();
 
     if (!response.ok) {
@@ -283,29 +288,29 @@ const AppProvider = ({ children }: { children: ReactNode }) => {
         checkAuth();
     }, [token, logout]);
 
-    const handleAuthSuccess = (authData: { access_token: string, refresh_token: string }) => {
+    const handleAuthSuccess = async (authData: { access_token: string, refresh_token: string }) => {
         localStorage.setItem('directus_token', authData.access_token);
         localStorage.setItem('directus_refresh_token', authData.refresh_token);
         setToken(authData.access_token);
+        // After setting the token, fetch the user data immediately
+        const userData = await directusFetchMe();
+        setUser(userData);
     };
 
     const login = async (credentials: any) => {
         const authData = await directusLogin(credentials);
-        handleAuthSuccess(authData);
+        await handleAuthSuccess(authData);
     };
 
     const register = async (details: any) => {
-        // NOTE: This assumes new users are created with a default role that allows login.
-        // You must configure this role in your Directus project settings.
-        // A common approach is to have a 'public' role with create permissions on the 'users' collection.
         await directusRegister(details);
         const authData = await directusLogin({ email: details.email, password: details.password });
-        handleAuthSuccess(authData);
+        await handleAuthSuccess(authData);
     };
 
     const updateUserApiKey = async (key: string) => {
-        const updatedUser = await directusUpdateMe({ elastic_email_api_key: key });
-        setUser(prev => prev ? { ...prev, elastic_email_api_key: updatedUser.elastic_email_api_key } : null);
+        await directusUpdateMe({ elastic_email_api_key: key });
+        setUser(prev => prev ? { ...prev, elastic_email_api_key: key } : null);
     };
 
     const apiKey = user?.elastic_email_api_key ?? null;
@@ -1677,7 +1682,11 @@ const AuthView = () => {
                 });
             }
         } catch (err: any) {
-            setError(err.message || 'An unknown error occurred.');
+            let errorMessage = err.message || 'An unknown error occurred.';
+            if (err instanceof TypeError && err.message === 'Failed to fetch') {
+                errorMessage = 'Could not connect to the server. This is often due to a CORS configuration issue on the server or a network problem. Please contact the administrator.';
+            }
+            setError(errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -1740,7 +1749,11 @@ const ApiKeySetupView = () => {
             await apiFetch('/account/load', apiKey); // Verify key first
             await updateUserApiKey(apiKey);
         } catch (err: any) {
-            setError(err.message || "Invalid API key or failed to save.");
+            let errorMessage = err.message || "Invalid API key or failed to save.";
+            if (err instanceof TypeError && err.message === 'Failed to fetch') {
+                errorMessage = 'Could not connect to the API server. Please check your network connection and try again.';
+            }
+            setError(errorMessage);
         } finally {
             setIsLoading(false);
         }

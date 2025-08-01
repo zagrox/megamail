@@ -1,5 +1,6 @@
 {
   "name": "MegaMail v2",
   "description": "Email Marketing App",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "prompt": ""
 }

@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { useState, useEffect, useCallback, ReactNode, useContext, createContext } from 'react';
 import { createRoot } from 'react-dom/client';
 
 const ELASTIC_EMAIL_API_BASE = 'https://api.elasticemail.com/v2';
 const ELASTIC_EMAIL_API_V4_BASE = 'https://api.elasticemail.com/v4';
+const DIRECTUS_URL = 'https://user.advering.ltd';
 
 // --- Icon Components ---
 const Icon = ({ path, className = '' }: { path: string; className?: string }) => (
@@ -120,68 +121,220 @@ const apiFetchV4 = async (endpoint: string, apiKey: string, options: { method?: 
     return text ? JSON.parse(text) : {};
 };
 
+// --- Directus API Helpers ---
+const directusFetch = async (endpoint: string, options: RequestInit = {}) => {
+    const url = `${DIRECTUS_URL}${endpoint}`;
+    const token = localStorage.getItem('directus_token');
+    
+    const headers = new Headers(options.headers || {});
+    headers.set('Content-Type', 'application/json');
+    if (token) {
+        headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    const response = await fetch(url, { ...options, headers });
+    const data = await response.json();
+
+    if (!response.ok) {
+        const errorMessage = data?.errors?.[0]?.message || 'An unknown Directus API error occurred.';
+        throw new Error(errorMessage);
+    }
+    return data.data;
+};
+
+const directusLogin = (body: any) => directusFetch('/auth/login', { method: 'POST', body: JSON.stringify(body) });
+const directusRegister = (body: any) => directusFetch('/users', { method: 'POST', body: JSON.stringify(body) });
+const directusFetchMe = () => directusFetch('/users/me');
+const directusUpdateMe = (body: any) => directusFetch('/users/me', { method: 'PATCH', body: JSON.stringify(body) });
+const directusLogout = (refreshToken: string) => directusFetch('/auth/logout', { method: 'POST', body: JSON.stringify({ refresh_token: refreshToken }) });
+
 
 // --- Custom Hook for API calls (v2) ---
-const useApi = (endpoint: string, apiKey: string, params: Record<string, any> = {}, refetchIndex = 0) => {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<{message: string, endpoint: string} | null>(null);
-  
-  const paramsString = JSON.stringify(params);
+const useApi = (endpoint: string, apiKey: string | null, params: Record<string, any> = {}, options: { enabled?: boolean } = {}) => {
+    const { enabled = true } = options;
+    const [data, setData] = useState<any>(null);
+    const [loading, setLoading] = useState(enabled);
+    const [error, setError] = useState<{ message: string, endpoint: string } | null>(null);
+    const [refetchIndex, setRefetchIndex] = useState(0);
 
-  useEffect(() => {
-    if (!apiKey || !endpoint || refetchIndex === 0) {
-        setLoading(false);
-        return;
-    };
+    const paramsString = JSON.stringify(params);
 
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await apiFetch(endpoint, apiKey, { params: JSON.parse(paramsString) });
-        setData(result);
-      } catch (err: any) {
-        setError({message: err.message, endpoint});
-      } finally {
-        setLoading(false);
-      }
-    };
+    const refetch = useCallback(() => setRefetchIndex(i => i + 1), []);
 
-    fetchData();
-  }, [endpoint, apiKey, paramsString, refetchIndex]);
+    useEffect(() => {
+        if (!enabled || !apiKey || !endpoint) {
+            setLoading(false);
+            if (!enabled) setData(null);
+            return;
+        }
 
-  return { data, loading, error };
+        const fetchData = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const result = await apiFetch(endpoint, apiKey, { params: JSON.parse(paramsString) });
+                setData(result);
+            } catch (err: any) {
+                setError({ message: err.message, endpoint });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [endpoint, apiKey, paramsString, enabled, refetchIndex]);
+
+    return { data, loading, error, refetch };
 };
 
 // --- Custom Hook for API calls (v4) ---
-const useApiV4 = (endpoint: string, apiKey: string, params: Record<string, any> = {}, refetchIndex = 0) => {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<{message: string, endpoint: string} | null>(null);
+const useApiV4 = (endpoint: string, apiKey: string | null, params: Record<string, any> = {}, options: { enabled?: boolean } = {}) => {
+    const { enabled = true } = options;
+    const [data, setData] = useState<any>(null);
+    const [loading, setLoading] = useState(enabled);
+    const [error, setError] = useState<{ message: string, endpoint: string } | null>(null);
+    const [refetchIndex, setRefetchIndex] = useState(0);
+    
+    const paramsString = JSON.stringify(params);
+    const refetch = useCallback(() => setRefetchIndex(i => i + 1), []);
 
-  const paramsString = JSON.stringify(params);
+    useEffect(() => {
+        if (!enabled || !apiKey || !endpoint) {
+            setLoading(false);
+            if (!enabled) setData(null);
+            return;
+        }
 
-  useEffect(() => {
-    if (!apiKey || !endpoint) return;
+        const fetchData = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const result = await apiFetchV4(endpoint, apiKey, { params: JSON.parse(paramsString) });
+                setData(result);
+            } catch (err: any) {
+                setError({ message: err.message, endpoint });
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await apiFetchV4(endpoint, apiKey, { params: JSON.parse(paramsString) });
-        setData(result);
-      } catch (err: any) {
-        setError({ message: err.message, endpoint });
-      } finally {
-        setLoading(false);
-      }
+        fetchData();
+    }, [endpoint, apiKey, paramsString, enabled, refetchIndex]);
+
+    return { data, loading, error, refetch };
+};
+
+
+// --- App Context for Auth and Global State ---
+interface User {
+    id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    elastic_email_api_key?: string;
+    role: string;
+}
+
+interface AppContextType {
+    user: User | null;
+    token: string | null;
+    authLoading: boolean;
+    isAuthenticated: boolean;
+    apiKey: string | null;
+    accountData: any | null;
+    loadingAccount: boolean;
+    login: (credentials: any) => Promise<void>;
+    register: (details: any) => Promise<void>;
+    logout: () => void;
+    updateUserApiKey: (key: string) => Promise<void>;
+}
+
+const AppContext = createContext<AppContextType | undefined>(undefined);
+
+const AppProvider = ({ children }: { children: ReactNode }) => {
+    const [user, setUser] = useState<User | null>(null);
+    const [token, setToken] = useState<string | null>(() => localStorage.getItem('directus_token'));
+    const [authLoading, setAuthLoading] = useState(true);
+
+    const logout = useCallback(() => {
+        const refreshToken = localStorage.getItem('directus_refresh_token');
+        if (refreshToken) {
+            directusLogout(refreshToken).catch(console.error);
+        }
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem('directus_token');
+        localStorage.removeItem('directus_refresh_token');
+    }, []);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            if (token) {
+                try {
+                    const userData = await directusFetchMe();
+                    setUser(userData);
+                } catch (error) {
+                    console.error("Session check failed:", error);
+                    logout();
+                }
+            }
+            setAuthLoading(false);
+        };
+        checkAuth();
+    }, [token, logout]);
+
+    const handleAuthSuccess = (authData: { access_token: string, refresh_token: string }) => {
+        localStorage.setItem('directus_token', authData.access_token);
+        localStorage.setItem('directus_refresh_token', authData.refresh_token);
+        setToken(authData.access_token);
     };
 
-    fetchData();
-  }, [endpoint, apiKey, paramsString, refetchIndex]);
+    const login = async (credentials: any) => {
+        const authData = await directusLogin(credentials);
+        handleAuthSuccess(authData);
+    };
 
-  return { data, loading, error };
+    const register = async (details: any) => {
+        // NOTE: This assumes new users are created with a default role that allows login.
+        // You must configure this role in your Directus project settings.
+        // A common approach is to have a 'public' role with create permissions on the 'users' collection.
+        await directusRegister(details);
+        const authData = await directusLogin({ email: details.email, password: details.password });
+        handleAuthSuccess(authData);
+    };
+
+    const updateUserApiKey = async (key: string) => {
+        const updatedUser = await directusUpdateMe({ elastic_email_api_key: key });
+        setUser(prev => prev ? { ...prev, elastic_email_api_key: updatedUser.elastic_email_api_key } : null);
+    };
+
+    const apiKey = user?.elastic_email_api_key ?? null;
+    const { data: accountData, loading: loadingAccount } = useApi('/account/load', apiKey, {}, { enabled: !!apiKey });
+
+    const value = {
+        user,
+        token,
+        authLoading,
+        isAuthenticated: !!user,
+        apiKey,
+        accountData,
+        loadingAccount,
+        login,
+        register,
+        logout,
+        updateUserApiKey
+    };
+
+    return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+};
+
+
+const useAppContext = () => {
+    const context = useContext(AppContext);
+    if (context === undefined) {
+        throw new Error('useAppContext must be used within an AppProvider');
+    }
+    return context;
 };
 
 // --- Reusable Components ---
@@ -293,7 +446,8 @@ const formatDateForDisplay = (dateString: string | undefined) => {
 
 // --- View Components ---
 
-const StatisticsView = ({ apiKey }: { apiKey: string }) => {
+const StatisticsView = () => {
+    const { apiKey } = useAppContext();
     const [duration, setDuration] = useState('3months');
 
     const durationOptions: {[key: string]: {label: string, from: () => Date}} = {
@@ -308,7 +462,7 @@ const StatisticsView = ({ apiKey }: { apiKey: string }) => {
     const apiParams = {
         from: formatDateForApiV4(durationOptions[duration].from()),
     };
-    const { data: stats, loading, error } = useApiV4(`/statistics`, apiKey, apiParams);
+    const { data: stats, loading, error } = useApiV4(`/statistics`, apiKey, apiParams, { enabled: !!apiKey });
     
     const filterControl = (
         <div className="view-controls">
@@ -367,20 +521,33 @@ const StatisticsView = ({ apiKey }: { apiKey: string }) => {
     );
 };
 
-const AccountView = ({ apiKey }: { apiKey: string }) => {
-    const { data, loading, error } = useApi('/account/load', apiKey, {}, 1);
-    const [copyStatus, setCopyStatus] = useState('');
+const AccountView = () => {
+    const { user, apiKey, accountData: data, loadingAccount: loading, updateUserApiKey } = useAppContext();
+    const [newApiKey, setNewApiKey] = useState(apiKey || '');
+    const [isSaving, setIsSaving] = useState(false);
+    const [status, setStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
 
-    const handleCopy = (textToCopy: string, message: string) => {
-        if (!textToCopy) return;
-        navigator.clipboard.writeText(textToCopy);
-        setCopyStatus(message);
-        setTimeout(() => setCopyStatus(''), 2000);
+    useEffect(() => {
+        setNewApiKey(apiKey || '');
+    }, [apiKey]);
+    
+    const handleSaveKey = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSaving(true);
+        setStatus(null);
+        try {
+            await updateUserApiKey(newApiKey);
+            setStatus({ type: 'success', message: 'API Key updated successfully!' });
+        } catch (err: any) {
+            setStatus({ type: 'error', message: `Failed to update key: ${err.message}` });
+        } finally {
+            setIsSaving(false);
+        }
     };
 
+
     if (loading) return <CenteredMessage><Loader /></CenteredMessage>;
-    if (error) return <ErrorMessage error={error} />;
-    if (!data) return <CenteredMessage>No account data found.</CenteredMessage>;
+    if (!data || !user) return <CenteredMessage>No account data found.</CenteredMessage>;
 
     const getStatusType = (status: string) => {
         const cleanStatus = String(status || '').toLowerCase().replace(/\s/g, '');
@@ -399,10 +566,10 @@ const AccountView = ({ apiKey }: { apiKey: string }) => {
         return { text: 'Very Poor', className: 'bad' };
     };
     
-    const status = data.status || 'Active';
-    const statusType = getStatusType(status);
+    const accountStatus = data.status || 'Active';
+    const statusType = getStatusType(accountStatus);
     const reputation = getReputationInfo(data.reputation);
-    const fullName = [data.firstname, data.lastname].filter(Boolean).join(' ');
+    const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
 
     return (
         <div className="profile-view-container">
@@ -430,9 +597,11 @@ const AccountView = ({ apiKey }: { apiKey: string }) => {
                 </div>
             </div>
 
+            <ActionStatus status={status} onDismiss={() => setStatus(null)} />
+
             <div className="card-grid account-grid">
                 <AccountDataCard title="Account Status" iconPath={ICONS.VERIFY}>
-                    <Badge text={status} type={statusType} />
+                    <Badge text={accountStatus} type={statusType} />
                 </AccountDataCard>
                 <AccountDataCard title="Reputation" iconPath={ICONS.TRENDING_UP}>
                     <span className={`reputation-score ${reputation.className}`}>{data.reputation ?? 0}%</span>
@@ -441,13 +610,22 @@ const AccountView = ({ apiKey }: { apiKey: string }) => {
                 <AccountDataCard title="Daily Send Limit" iconPath={ICONS.SEND_EMAIL}>
                     {(data.dailysendlimit ?? 0).toLocaleString()}
                 </AccountDataCard>
-                 <AccountDataCard title="API Key" iconPath={ICONS.KEY}>
-                    <div className="copyable-field" onClick={() => handleCopy(apiKey, 'API Key Copied!')}>
-                        <span className="small-text">{apiKey}</span>
-                        {copyStatus === 'API Key Copied!' && <span className="copy-tooltip">Copied!</span>}
-                    </div>
-                </AccountDataCard>
             </div>
+            
+            <form className="form-container" onSubmit={handleSaveKey} style={{maxWidth: 'none', marginTop: '1rem'}}>
+                 <div className="form-group full-width">
+                    <label htmlFor="api-key-input">Your Elastic Email API Key</label>
+                    <input id="api-key-input" type="password" value={newApiKey} onChange={e => setNewApiKey(e.target.value)} />
+                    <small style={{display: 'block', marginTop: '0.5rem'}}>
+                        Update your key here. It will be stored securely.
+                    </small>
+                </div>
+                <div className="form-actions">
+                    <button type="submit" className="btn btn-primary" disabled={isSaving}>
+                        {isSaving ? <Loader /> : 'Save API Key'}
+                    </button>
+                </div>
+            </form>
         </div>
     );
 };
@@ -463,10 +641,9 @@ const creditPackages = [
     { credits: 150000, price: 5000000 }, { credits: 200000, price: 6000000 },
 ];
 
-const CreditHistoryModal = ({ isOpen, onClose, apiKey }: { isOpen: boolean, onClose: () => void, apiKey: string }) => {
-    // Use the v2 hook as originally suggested for this specific endpoint
-    const refetchIndex = isOpen ? 1 : 0;
-    const { data: history, loading, error } = useApi('/account/loademailcreditshistory', apiKey, {}, refetchIndex);
+const CreditHistoryModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
+    const { apiKey } = useAppContext();
+    const { data: history, loading, error } = useApi('/account/loademailcreditshistory', apiKey, {}, { enabled: isOpen });
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Credit Purchase History">
@@ -509,7 +686,8 @@ const CreditHistoryModal = ({ isOpen, onClose, apiKey }: { isOpen: boolean, onCl
 };
 
 
-const BuyCreditsView = ({ apiKey, user }: { apiKey: string, user: any }) => {
+const BuyCreditsView = () => {
+    const { apiKey, user } = useAppContext();
     const [isSubmitting, setIsSubmitting] = useState<number | null>(null); // track which package is submitting
     const [modalState, setModalState] = useState({ isOpen: false, title: '', message: '' });
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -523,7 +701,7 @@ const BuyCreditsView = ({ apiKey, user }: { apiKey: string, user: any }) => {
         setIsSubmitting(pkg.credits);
 
         const params = new URLSearchParams({
-            userapikey: apiKey,
+            userapikey: apiKey!,
             useremail: user.email,
             amount: pkg.credits.toString(),
             totalprice: pkg.price.toString(),
@@ -570,7 +748,7 @@ const BuyCreditsView = ({ apiKey, user }: { apiKey: string, user: any }) => {
                     View History
                 </button>
             </div>
-            <CreditHistoryModal isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} apiKey={apiKey} />
+            <CreditHistoryModal isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} />
 
             <Modal isOpen={modalState.isOpen} onClose={closeModal} title={modalState.title}>
                 <p style={{whiteSpace: "pre-wrap"}}>{modalState.message}</p>
@@ -615,7 +793,8 @@ const BuyCreditsView = ({ apiKey, user }: { apiKey: string, user: any }) => {
     );
 };
 
-const DashboardView = ({ setView, apiKey, user }: { setView: (view: string) => void, apiKey: string, user: any }) => {
+const DashboardView = ({ setView }: { setView: (view: string) => void }) => {
+    const { apiKey, accountData: user } = useAppContext();
     const { data: statsData, loading: statsLoading, error: statsError } = useApiV4(`/statistics`, apiKey, { from: formatDateForApiV4(getPastDateByDays(30)) });
 
     const navItems = [
@@ -680,8 +859,8 @@ const DashboardView = ({ setView, apiKey, user }: { setView: (view: string) => v
 
 // --- START OF IMPLEMENTED VIEWS ---
 
-const ContactsView = ({ apiKey }: { apiKey: string }) => {
-    const [refetchIndex, setRefetchIndex] = useState(0);
+const ContactsView = () => {
+    const { apiKey } = useAppContext();
     const [searchQuery, setSearchQuery] = useState('');
     const [offset, setOffset] = useState(0);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -689,12 +868,11 @@ const ContactsView = ({ apiKey }: { apiKey: string }) => {
 
     const CONTACTS_PER_PAGE = 20;
 
-    const { data: contacts, loading, error } = useApiV4('/contacts', apiKey, { limit: CONTACTS_PER_PAGE, offset, search: searchQuery }, refetchIndex);
-    const refetch = () => setRefetchIndex(i => i + 1);
+    const { data: contacts, loading, error, refetch } = useApiV4('/contacts', apiKey, { limit: CONTACTS_PER_PAGE, offset, search: searchQuery }, { enabled: !!apiKey });
 
     const handleAddContact = async (contactData: {Email: string, FirstName: string, LastName: string}) => {
         try {
-            await apiFetchV4('/contacts', apiKey, { method: 'POST', body: [contactData] });
+            await apiFetchV4('/contacts', apiKey!, { method: 'POST', body: [contactData] });
             setActionStatus({ type: 'success', message: `Contact ${contactData.Email} added successfully!` });
             setIsModalOpen(false);
             refetch();
@@ -706,7 +884,7 @@ const ContactsView = ({ apiKey }: { apiKey: string }) => {
     const handleDeleteContact = async (email: string) => {
         if (!window.confirm(`Are you sure you want to delete ${email}?`)) return;
         try {
-            await apiFetchV4(`/contacts/${encodeURIComponent(email)}`, apiKey, { method: 'DELETE' });
+            await apiFetchV4(`/contacts/${encodeURIComponent(email)}`, apiKey!, { method: 'DELETE' });
             setActionStatus({ type: 'success', message: `Contact ${email} deleted successfully!` });
             refetch();
         } catch (err: any) {
@@ -834,21 +1012,20 @@ const AddContactForm = ({ onSubmit }: { onSubmit: (data: {Email: string, FirstNa
 };
 
 
-const EmailListView = ({ apiKey }: { apiKey: string }) => {
-    const [refetchIndex, setRefetchIndex] = useState(0);
+const EmailListView = () => {
+    const { apiKey } = useAppContext();
     const [actionStatus, setActionStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
     const [newListName, setNewListName] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const { data: lists, loading, error } = useApiV4('/lists', apiKey, {}, refetchIndex);
-    const refetch = () => setRefetchIndex(i => i + 1);
+    const { data: lists, loading, error, refetch } = useApiV4('/lists', apiKey, {}, { enabled: !!apiKey });
 
     const handleCreateList = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newListName) return;
         setIsSubmitting(true);
         try {
-            await apiFetchV4('/lists', apiKey, { method: 'POST', body: { ListName: newListName } });
+            await apiFetchV4('/lists', apiKey!, { method: 'POST', body: { ListName: newListName } });
             setActionStatus({ type: 'success', message: `List "${newListName}" created.` });
             setNewListName('');
             refetch();
@@ -862,7 +1039,7 @@ const EmailListView = ({ apiKey }: { apiKey: string }) => {
     const handleDeleteList = async (listName: string) => {
         if (!window.confirm(`Are you sure you want to delete the list "${listName}"? This cannot be undone.`)) return;
         try {
-            await apiFetchV4(`/lists/${encodeURIComponent(listName)}`, apiKey, { method: 'DELETE' });
+            await apiFetchV4(`/lists/${encodeURIComponent(listName)}`, apiKey!, { method: 'DELETE' });
             setActionStatus({ type: 'success', message: `List "${listName}" deleted.` });
             refetch();
         } catch (err: any) {
@@ -915,17 +1092,16 @@ const EmailListView = ({ apiKey }: { apiKey: string }) => {
     );
 };
 
-const SegmentsView = ({ apiKey }: { apiKey: string }) => {
-    const [refetchIndex, setRefetchIndex] = useState(0);
+const SegmentsView = () => {
+    const { apiKey } = useAppContext();
     const [actionStatus, setActionStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     
-    const { data: segments, loading, error } = useApiV4('/segments', apiKey, {}, refetchIndex);
-    const refetch = () => setRefetchIndex(i => i + 1);
+    const { data: segments, loading, error, refetch } = useApiV4('/segments', apiKey, {}, { enabled: !!apiKey });
 
     const handleCreateSegment = async (segmentData: {Name: string, Rule: string}) => {
         try {
-            await apiFetchV4('/segments', apiKey, { method: 'POST', body: segmentData });
+            await apiFetchV4('/segments', apiKey!, { method: 'POST', body: segmentData });
             setActionStatus({ type: 'success', message: `Segment "${segmentData.Name}" created.` });
             setIsModalOpen(false);
             refetch();
@@ -937,7 +1113,7 @@ const SegmentsView = ({ apiKey }: { apiKey: string }) => {
     const handleDeleteSegment = async (segmentName: string) => {
         if (!window.confirm(`Are you sure you want to delete the segment "${segmentName}"?`)) return;
         try {
-            await apiFetchV4(`/segments/${encodeURIComponent(segmentName)}`, apiKey, { method: 'DELETE' });
+            await apiFetchV4(`/segments/${encodeURIComponent(segmentName)}`, apiKey!, { method: 'DELETE' });
             setActionStatus({ type: 'success', message: `Segment "${segmentName}" deleted.` });
             refetch();
         } catch (err: any) {
@@ -1013,7 +1189,8 @@ const CreateSegmentForm = ({ onSubmit }: { onSubmit: (data: {Name: string, Rule:
     );
 }
 
-const SendEmailView = ({ apiKey, user }: { apiKey: string, user: any }) => {
+const SendEmailView = () => {
+    const { apiKey, user } = useAppContext();
     const [isSending, setIsSending] = useState(false);
     const [sendStatus, setSendStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
     const [formData, setFormData] = useState({
@@ -1054,7 +1231,7 @@ const SendEmailView = ({ apiKey, user }: { apiKey: string, user: any }) => {
         }
 
         try {
-            await apiFetch('/email/send', apiKey, { method: 'POST', params });
+            await apiFetch('/email/send', apiKey!, { method: 'POST', params });
             setSendStatus({ type: 'success', message: 'Email sent successfully!' });
         } catch (err: any) {
             setSendStatus({ type: 'error', message: `Failed to send email: ${err.message}` });
@@ -1154,8 +1331,9 @@ const CampaignCardSkeleton = () => (
     </div>
 );
 
-const CampaignsView = ({ apiKey }: { apiKey: string }) => {
-    const { data: campaigns, loading, error } = useApiV4('/campaigns', apiKey);
+const CampaignsView = () => {
+    const { apiKey } = useAppContext();
+    const { data: campaigns, loading, error } = useApiV4('/campaigns', apiKey, {}, { enabled: !!apiKey });
     
     const getBadgeTypeForStatus = (statusName: string | undefined) => {
         const lowerStatus = (statusName || '').toLowerCase();
@@ -1322,27 +1500,24 @@ const DomainVerificationChecker = ({ domainName }: { domainName: string }) => {
     );
 };
 
-const DomainsView = ({ apiKey }: { apiKey: string }) => {
-    const [refetchIndex, setRefetchIndex] = useState(0);
+const DomainsView = () => {
+    const { apiKey } = useAppContext();
     const [actionStatus, setActionStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
     const [newDomain, setNewDomain] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [expandedDomain, setExpandedDomain] = useState<string | null>(null);
 
-    const { data, loading, error } = useApiV4('/domains', apiKey, {}, refetchIndex);
-    const refetch = () => {
-        setExpandedDomain(null);
-        setRefetchIndex(i => i + 1);
-    }
+    const { data, loading, error, refetch } = useApiV4('/domains', apiKey, {}, { enabled: !!apiKey });
 
     const handleAddDomain = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newDomain) return;
         setIsSubmitting(true);
         try {
-            await apiFetchV4('/domains', apiKey, { method: 'POST', body: { Domain: newDomain } });
+            await apiFetchV4('/domains', apiKey!, { method: 'POST', body: { Domain: newDomain } });
             setActionStatus({ type: 'success', message: `Domain "${newDomain}" added. Please add DNS records and verify.` });
             setNewDomain('');
+            setExpandedDomain(null);
             refetch();
         } catch (err: any) {
             setActionStatus({ type: 'error', message: `Failed to add domain: ${err.message}` });
@@ -1354,8 +1529,9 @@ const DomainsView = ({ apiKey }: { apiKey: string }) => {
     const handleDeleteDomain = async (domainName: string) => {
         if (!window.confirm(`Are you sure you want to delete "${domainName}"?`)) return;
         try {
-            await apiFetchV4(`/domains/${encodeURIComponent(domainName)}`, apiKey, { method: 'DELETE' });
+            await apiFetchV4(`/domains/${encodeURIComponent(domainName)}`, apiKey!, { method: 'DELETE' });
             setActionStatus({ type: 'success', message: `Domain "${domainName}" deleted.` });
+            setExpandedDomain(null);
             refetch();
         } catch (err: any) {
             setActionStatus({ type: 'error', message: `Failed to delete domain: ${err.message}` });
@@ -1431,7 +1607,8 @@ const DomainsView = ({ apiKey }: { apiKey: string }) => {
 };
 
 
-const SmtpView = ({ apiKey, user }: { apiKey: string, user: any }) => {
+const SmtpView = () => {
+    const { apiKey, user } = useAppContext();
     if (!user) return <CenteredMessage><Loader /></CenteredMessage>;
 
     const smtpDetails = {
@@ -1452,8 +1629,8 @@ const SmtpView = ({ apiKey, user }: { apiKey: string, user: any }) => {
                     <div className="smtp-detail-item full-span">
                         <label>Password</label>
                         <div className="secret-value-wrapper">
-                            <input type="password" value={apiKey} readOnly />
-                            <button className="btn" onClick={() => navigator.clipboard.writeText(apiKey)}>Copy</button>
+                            <input type="password" value={apiKey!} readOnly />
+                            <button className="btn" onClick={() => navigator.clipboard.writeText(apiKey!)}>Copy</button>
                         </div>
                         <small style={{display: 'block', marginTop: '0.5rem'}}>Your password is your API Key.</small>
                     </div>
@@ -1468,59 +1645,134 @@ const SmtpView = ({ apiKey, user }: { apiKey: string, user: any }) => {
 
 
 // --- Main App & Auth Flow ---
-const Auth = ({ setApiKey }: { setApiKey: (key: string) => void }) => {
-    const [key, setKey] = useState('');
-    const [loading, setLoading] = useState(false);
+const AuthView = () => {
+    const { login, register } = useAppContext();
+    const [mode, setMode] = useState<'login' | 'register'>('login');
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
-    const [showKey, setShowKey] = useState(false);
+    const [form, setForm] = useState({
+        email: '',
+        password: '',
+        first_name: '',
+        last_name: ''
+    });
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
         setError('');
-        if (!key) {
-            setError('API Key cannot be empty.');
-            return;
-        }
-        setLoading(true);
         try {
-            await apiFetch('/account/load', key);
-            setApiKey(key);
+            if (mode === 'login') {
+                await login({ email: form.email, password: form.password });
+            } else {
+                await register({
+                    email: form.email,
+                    password: form.password,
+                    first_name: form.first_name,
+                    last_name: form.last_name,
+                });
+            }
         } catch (err: any) {
-            setError(err.message || 'Invalid API Key or connection issue.');
+            setError(err.message || 'An unknown error occurred.');
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
+    };
+    
+    const toggleMode = () => {
+        setMode(prev => prev === 'login' ? 'register' : 'login');
+        setError('');
     };
 
     return (
         <div className="auth-container">
             <div className="auth-box">
                 <h1 className="logo-font">MegaMail</h1>
-                <p>Enter your Elastic Email API Key to continue</p>
+                <p>{mode === 'login' ? 'Sign in to your account' : 'Create a new account'}</p>
                 <form className="auth-form" onSubmit={handleSubmit}>
-                    <div className="input-group">
-                         <input
-                            type={showKey ? 'text' : 'password'}
-                            value={key}
-                            onChange={(e) => setKey(e.target.value)}
-                            placeholder="Your API Key"
-                            aria-label="API Key"
-                            disabled={loading}
-                        />
-                        <button type="button" className="input-icon-btn" onClick={() => setShowKey(!showKey)} aria-label={showKey ? 'Hide key' : 'Show key'}>
-                            <Icon path={showKey ? ICONS.EYE_OFF : ICONS.EYE} />
-                        </button>
+                    {mode === 'register' && (
+                        <>
+                             <div className="form-group">
+                                <input name="first_name" type="text" value={form.first_name} onChange={handleInputChange} placeholder="First Name" required disabled={isLoading} />
+                            </div>
+                             <div className="form-group">
+                                <input name="last_name" type="text" value={form.last_name} onChange={handleInputChange} placeholder="Last Name" required disabled={isLoading} />
+                            </div>
+                        </>
+                    )}
+                    <div className="form-group">
+                        <input name="email" type="email" value={form.email} onChange={handleInputChange} placeholder="Email Address" required disabled={isLoading} />
                     </div>
-                    {error && <div className="action-status error" style={{textAlign:'center'}}>{error}</div>}
-                    <button type="submit" className="btn btn-primary" disabled={loading}>
-                        {loading && <Loader />}
-                        <span>{loading ? 'Verifying...' : 'Continue'}</span>
+                    <div className="form-group">
+                        <input name="password" type="password" value={form.password} onChange={handleInputChange} placeholder="Password" required disabled={isLoading} />
+                    </div>
+                    
+                    {error && <div className="action-status error">{error}</div>}
+                    
+                    <button type="submit" className="btn btn-primary" disabled={isLoading}>
+                        {isLoading && <Loader />}
+                        <span>{isLoading ? 'Processing...' : (mode === 'login' ? 'Login' : 'Create Account')}</span>
+                    </button>
+                </form>
+                <button onClick={toggleMode} className="toggle-auth-btn">
+                    {mode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+                </button>
+            </div>
+        </div>
+    );
+};
+
+const ApiKeySetupView = () => {
+    const { updateUserApiKey } = useAppContext();
+    const [apiKey, setApiKey] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setError('');
+        try {
+            await apiFetch('/account/load', apiKey); // Verify key first
+            await updateUserApiKey(apiKey);
+        } catch (err: any) {
+            setError(err.message || "Invalid API key or failed to save.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="auth-container">
+            <div className="auth-box">
+                <h1 className="logo-font">One More Step</h1>
+                <p>Please provide your Elastic Email API key to continue.</p>
+                <form className="auth-form" onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <input
+                            type="password"
+                            value={apiKey}
+                            onChange={(e) => setApiKey(e.target.value)}
+                            placeholder="Your Elastic Email API Key"
+                            required
+                            disabled={isLoading}
+                        />
+                    </div>
+                     {error && <div className="action-status error">{error}</div>}
+                    <button type="submit" className="btn btn-primary" disabled={isLoading}>
+                        {isLoading && <Loader />}
+                        <span>{isLoading ? 'Verifying & Saving...' : 'Save and Continue'}</span>
                     </button>
                 </form>
             </div>
         </div>
     );
 };
+
 
 const views: { [key: string]: React.ComponentType<any> } = {
     Dashboard: DashboardView,
@@ -1541,42 +1793,47 @@ const getIconForView = (viewName: string) => {
     return (ICONS as Record<string, string>)[normalizedName] || ICONS.DEFAULT;
 };
 
-const App = () => {
-    const [apiKey, setApiKey] = useState<string | null>(localStorage.getItem('ee_api_key'));
+const AppContent = () => {
+    const { authLoading, isAuthenticated, apiKey, loadingAccount } = useAppContext();
     const [view, setView] = useState('Dashboard');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-    const { data: accountData } = useApi('/account/load', apiKey || '', {}, apiKey ? 1 : 0);
     
-    useEffect(() => {
-        if (apiKey) {
-            localStorage.setItem('ee_api_key', apiKey);
-        } else {
-            localStorage.removeItem('ee_api_key');
-        }
-    }, [apiKey]);
-    
-    // Close mobile menu on view change
     useEffect(() => {
         setMobileMenuOpen(false);
     }, [view]);
 
-    const logout = () => {
-        setApiKey(null);
-    };
-
+    if (authLoading) {
+      return (
+        <div className="auth-container">
+          <Loader />
+        </div>
+      );
+    }
+    
+    if (!isAuthenticated) {
+        return <AuthView />;
+    }
+    
     if (!apiKey) {
-        return <Auth setApiKey={setApiKey} />;
+        return <ApiKeySetupView />;
+    }
+
+    if (loadingAccount) {
+         return (
+            <div className="auth-container">
+                <Loader />
+            </div>
+        );
     }
 
     const renderView = () => {
         const Component = views[view] || DashboardView;
-        return <Component apiKey={apiKey} setView={setView} user={accountData} />;
+        return <Component setView={setView} />;
     };
 
     return (
         <div className={`app-container ${mobileMenuOpen ? 'mobile-menu-open' : ''}`}>
-            <Sidebar view={view} setView={setView} logout={logout} />
+            <Sidebar view={view} setView={setView} />
             <div className="mobile-menu-overlay" onClick={() => setMobileMenuOpen(false)}></div>
             <main className="main-wrapper">
                 <MobileHeader
@@ -1594,7 +1851,8 @@ const App = () => {
     );
 };
 
-const Sidebar = ({ view, setView, logout }: { view: string, setView: (view: string) => void, logout: () => void }) => {
+const Sidebar = ({ view, setView }: { view: string, setView: (view: string) => void }) => {
+    const { logout } = useAppContext();
     const mainNavItems = ['Dashboard', 'Statistics', 'Contacts', 'Email Lists', 'Segments', 'Send Email', 'Campaigns', 'Domains', 'SMTP'];
 
     return (
@@ -1640,6 +1898,11 @@ const MobileHeader = ({ viewTitle, onMenuClick }: { viewTitle: string, onMenuCli
     );
 }
 
+const App = () => (
+    <AppProvider>
+        <AppContent />
+    </AppProvider>
+);
 
 const container = document.getElementById('root');
 if (container) {

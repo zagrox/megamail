@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 
 // --- CONFIGURATION ---
 // TODO: Replace with your public Directus instance URL
-const DIRECTUS_URL = 'https://user.advering.ltd'; 
+const DIRECTUS_URL = 'https://club.advering.ltd'; 
 const ELASTIC_EMAIL_API_BASE = 'https://api.elasticemail.com/v2';
 const ELASTIC_EMAIL_API_V4_BASE = 'https://api.elasticemail.com/v4';
 

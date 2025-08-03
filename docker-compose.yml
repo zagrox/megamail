@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  manage-backend:
+  app-backend:
     image: directus/directus:11.5.1
-    container_name: manage-backend
+    container_name: app-backend
     ports:
       - 8055:8055
     volumes:
@@ -12,40 +12,40 @@ services:
       - ./extensions:/directus/extensions
     environment:
       SECRET: "replace-with-random-value"
-      ADMIN_EMAIL: "admin@manage.mailzila.com"
+      ADMIN_EMAIL: "admin@app.megamail.ir"
       ADMIN_PASSWORD: "d1r3ctu5"
       DB_CLIENT: "pg"
-      DB_HOST: manage-db
+      DB_HOST: app-db
       DB_PORT: 5432
-      DB_DATABASE: manage
-      DB_USER: manage_user
-      DB_PASSWORD: manage_pass
+      DB_DATABASE: megamail
+      DB_USER: megamail_user
+      DB_PASSWORD: megamail_pass
       WEBSOCKETS_ENABLED: "true"
       CORS_ENABLED: "true"
-      CORS_ORIGIN: "https://portal.mailzila.com"
+      CORS_ORIGIN: "https://megamail.ir"
     depends_on:
-      - manage-db
+      - app-db
 
-  manage-db:
+  app-db:
     image: postgres:15
-    container_name: manage-db
+    container_name: app-db
     restart: always
     ports:
       - 5432:5432
     volumes:
-      - manage_pgdata:/var/lib/postgresql/data
+      - megamail_pgdata:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: manage
-      POSTGRES_USER: manage_user
-      POSTGRES_PASSWORD: manage_pass
+      POSTGRES_DB: megamail
+      POSTGRES_USER: megamail_user
+      POSTGRES_PASSWORD: megamail_pass
 
-  portal-frontend:
+  megamail-frontend:
     build: ./megamail
-    container_name: portal-frontend
+    container_name: megamail-frontend
     ports:
       - 3000:3000
     environment:
-      VITE_API_BASE_URL: https://manage.mailzila.com
+      VITE_API_BASE_URL: https://app.megamail.ir
 
 volumes:
-  manage_pgdata:
+  megamail_pgdata:

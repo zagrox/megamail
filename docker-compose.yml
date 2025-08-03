@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  manage-backend:
+    image: directus/directus:11.5.1
+    container_name: manage-backend
+    ports:
+      - 8055:8055
+    volumes:
+      - ./database:/directus/database
+      - ./uploads:/directus/uploads
+      - ./extensions:/directus/extensions
+    environment:
+      SECRET: "replace-with-random-value"
+      ADMIN_EMAIL: "admin@manage.mailzila.com"
+      ADMIN_PASSWORD: "d1r3ctu5"
+      DB_CLIENT: "pg"
+      DB_HOST: manage-db
+      DB_PORT: 5432
+      DB_DATABASE: manage
+      DB_USER: manage_user
+      DB_PASSWORD: manage_pass
+      WEBSOCKETS_ENABLED: "true"
+      CORS_ENABLED: "true"
+      CORS_ORIGIN: "https://portal.mailzila.com"
+    depends_on:
+      - manage-db
+
+  manage-db:
+    image: postgres:15
+    container_name: manage-db
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - manage_pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: manage
+      POSTGRES_USER: manage_user
+      POSTGRES_PASSWORD: manage_pass
+
+  portal-frontend:
+    build: ./megamail
+    container_name: portal-frontend
+    ports:
+      - 3000:3000
+    environment:
+      VITE_API_BASE_URL: https://manage.mailzila.com
+
+volumes:
+  manage_pgdata:

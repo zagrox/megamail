@@ -1,3 +1,6 @@
+
+
+
 :root {
   --primary-color: #1A2B3C;
   --secondary-color: #007BFF;
@@ -73,6 +76,35 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+/* Added for new Auth Form */
+.auth-form .form-group {
+    margin-bottom: 1rem;
+}
+.auth-form .form-group input {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-size: 1rem;
+    font-family: var(--font-family);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+.auth-form .form-group input:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+}
+.auth-form .action-status {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+.auth-form .btn {
+    margin-top: 1rem;
+}
+
 
 .input-group {
     position: relative;
@@ -157,19 +189,16 @@ body {
     height: 18px;
 }
 
-.auth-switch {
-    margin-top: 1.5rem;
-    font-size: 0.9rem;
-    color: var(--subtle-text-color);
-}
-.auth-switch button {
+.toggle-auth-btn {
     background: none;
     border: none;
     color: var(--secondary-color);
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
-    font-size: 0.9rem;
+    margin-top: 1.5rem;
+    padding: 0.5rem;
 }
+
 
 /* Main App Layout */
 .app-container {
@@ -754,10 +783,6 @@ td {
     grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
 }
-.auth-form .form-grid .input-group {
-    padding-right: 0;
-}
-
 
 .form-group {
     display: flex;

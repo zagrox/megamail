@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useCallback, ReactNode, createContext, useContext } from 'react';
+
+import React, { useState, useEffect, useCallback, ReactNode, useContext, createContext } from 'react';
 import { createRoot } from 'react-dom/client';
 
-// --- CONFIGURATION ---
-// TODO: Replace with your public Directus instance URL
-const DIRECTUS_URL = 'https://app.megamail.ir'; 
 const ELASTIC_EMAIL_API_BASE = 'https://api.elasticemail.com/v2';
 const ELASTIC_EMAIL_API_V4_BASE = 'https://api.elasticemail.com/v4';
+const DIRECTUS_URL = 'https://user.advering.ltd';
 
 // --- Icon Components ---
 const Icon = ({ path, className = '' }: { path: string; className?: string }) => (
@@ -49,40 +48,6 @@ const ICONS = {
     X_CIRCLE: "M10 10l4 4m0-4l-4 4M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
     LOADING_SPINNER: "M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83",
 };
-
-// --- API Helpers ---
-
-const directusFetch = async (endpoint: string, options: RequestInit = {}) => {
-    const url = `${DIRECTUS_URL}${endpoint}`;
-    const token = localStorage.getItem('directus_access_token');
-    
-    const headers = new Headers(options.headers || {});
-    headers.set('Content-Type', 'application/json');
-    if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-    }
-
-    const response = await fetch(url, { ...options, headers });
-
-    if (!response.ok) {
-        let errorData;
-        try {
-            errorData = await response.json();
-        } catch (e) {
-            throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
-        }
-        const errorMessage = errorData?.errors?.[0]?.message || 'An unknown Directus API error occurred.';
-        throw new Error(errorMessage);
-    }
-
-    if (response.status === 204) {
-        return null;
-    }
-    
-    const text = await response.text();
-    return text ? JSON.parse(text) : null;
-};
-
 
 // --- API Helper for v2 ---
 const apiFetch = async (endpoint: string, apiKey: string, options: { method?: 'GET' | 'POST', params?: Record<string, any> } = {}) => {
@@ -156,158 +121,220 @@ const apiFetchV4 = async (endpoint: string, apiKey: string, options: { method?: 
     return text ? JSON.parse(text) : {};
 };
 
-// --- Authentication Context ---
-interface AuthContextType {
-    user: any | null;
-    isAuthenticated: boolean;
-    loading: boolean;
-    login: (credentials: any) => Promise<void>;
-    register: (details: any) => Promise<void>;
-    logout: () => void;
-    updateUser: (data: any) => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [user, setUser] = useState<any | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    const getMe = useCallback(async () => {
-        const token = localStorage.getItem('directus_access_token');
-        if (!token) {
-            setLoading(false);
-            return;
-        }
-        try {
-            const { data } = await directusFetch('/users/me?fields=*.*');
-            setUser(data);
-        } catch (error) {
-            console.error("Failed to fetch user:", error);
-            localStorage.removeItem('directus_access_token');
-            setUser(null);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        getMe();
-    }, [getMe]);
-
-    const login = async (credentials: any) => {
-        const { data } = await directusFetch('/auth/login', {
-            method: 'POST',
-            body: JSON.stringify(credentials),
-        });
-        localStorage.setItem('directus_access_token', data.access_token);
-        await getMe();
-    };
-
-    const register = async (details: any) => {
-        await directusFetch('/users', {
-            method: 'POST',
-            body: JSON.stringify(details),
-        });
-        await login({ email: details.email, password: details.password });
-    };
-
-    const logout = () => {
-        localStorage.removeItem('directus_access_token');
-        setUser(null);
-    };
+// --- Directus API Helpers ---
+const directusFetch = async (endpoint: string, options: RequestInit = {}) => {
+    const url = `${DIRECTUS_URL}${endpoint}`;
+    const token = localStorage.getItem('directus_token');
     
-    const updateUser = async (data: any) => {
-        const { data: updatedUser } = await directusFetch('/users/me', {
-            method: 'PATCH',
-            body: JSON.stringify(data),
-        });
-        setUser(updatedUser);
+    const headers = new Headers(options.headers || {});
+    headers.set('Content-Type', 'application/json');
+    if (token) {
+        headers.set('Authorization', `Bearer ${token}`);
     }
 
-    const value = {
-        user,
-        isAuthenticated: !!user,
-        loading,
-        login,
-        register,
-        logout,
-        updateUser,
-    };
+    const response = await fetch(url, { ...options, headers });
+    const data = await response.json();
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
+    if (!response.ok) {
+        const errorMessage = data?.errors?.[0]?.message || 'An unknown Directus API error occurred.';
+        throw new Error(errorMessage);
     }
-    return context;
+    return data.data;
 };
+
+const directusLogin = (body: any) => directusFetch('/auth/login', { method: 'POST', body: JSON.stringify(body) });
+const directusRegister = (body: any) => directusFetch('/users', { method: 'POST', body: JSON.stringify(body) });
+const directusFetchMe = () => directusFetch('/users/me');
+const directusUpdateMe = (body: any) => directusFetch('/users/me', { method: 'PATCH', body: JSON.stringify(body) });
+const directusLogout = (refreshToken: string) => directusFetch('/auth/logout', { method: 'POST', body: JSON.stringify({ refresh_token: refreshToken }) });
 
 
 // --- Custom Hook for API calls (v2) ---
-const useApi = (endpoint: string, apiKey: string, params: Record<string, any> = {}, refetchIndex = 0) => {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<{message: string, endpoint: string} | null>(null);
-  
-  const paramsString = JSON.stringify(params);
+const useApi = (endpoint: string, apiKey: string | null, params: Record<string, any> = {}, options: { enabled?: boolean } = {}) => {
+    const { enabled = true } = options;
+    const [data, setData] = useState<any>(null);
+    const [loading, setLoading] = useState(enabled);
+    const [error, setError] = useState<{ message: string, endpoint: string } | null>(null);
+    const [refetchIndex, setRefetchIndex] = useState(0);
 
-  useEffect(() => {
-    if (!apiKey || !endpoint || refetchIndex === 0) {
-        setLoading(false);
-        return;
-    };
+    const paramsString = JSON.stringify(params);
 
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await apiFetch(endpoint, apiKey, { params: JSON.parse(paramsString) });
-        setData(result);
-      } catch (err: any) {
-        setError({message: err.message, endpoint});
-      } finally {
-        setLoading(false);
-      }
-    };
+    const refetch = useCallback(() => setRefetchIndex(i => i + 1), []);
 
-    fetchData();
-  }, [endpoint, apiKey, paramsString, refetchIndex]);
+    useEffect(() => {
+        if (!enabled || !apiKey || !endpoint) {
+            setLoading(false);
+            if (!enabled) setData(null);
+            return;
+        }
 
-  return { data, loading, error };
+        const fetchData = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const result = await apiFetch(endpoint, apiKey, { params: JSON.parse(paramsString) });
+                setData(result);
+            } catch (err: any) {
+                setError({ message: err.message, endpoint });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [endpoint, apiKey, paramsString, enabled, refetchIndex]);
+
+    return { data, loading, error, refetch };
 };
 
 // --- Custom Hook for API calls (v4) ---
-const useApiV4 = (endpoint: string, apiKey: string, params: Record<string, any> = {}, refetchIndex = 0) => {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<{message: string, endpoint: string} | null>(null);
+const useApiV4 = (endpoint: string, apiKey: string | null, params: Record<string, any> = {}, options: { enabled?: boolean } = {}) => {
+    const { enabled = true } = options;
+    const [data, setData] = useState<any>(null);
+    const [loading, setLoading] = useState(enabled);
+    const [error, setError] = useState<{ message: string, endpoint: string } | null>(null);
+    const [refetchIndex, setRefetchIndex] = useState(0);
+    
+    const paramsString = JSON.stringify(params);
+    const refetch = useCallback(() => setRefetchIndex(i => i + 1), []);
 
-  const paramsString = JSON.stringify(params);
+    useEffect(() => {
+        if (!enabled || !apiKey || !endpoint) {
+            setLoading(false);
+            if (!enabled) setData(null);
+            return;
+        }
 
-  useEffect(() => {
-    if (!apiKey || !endpoint) return;
+        const fetchData = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const result = await apiFetchV4(endpoint, apiKey, { params: JSON.parse(paramsString) });
+                setData(result);
+            } catch (err: any) {
+                setError({ message: err.message, endpoint });
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await apiFetchV4(endpoint, apiKey, { params: JSON.parse(paramsString) });
-        setData(result);
-      } catch (err: any) {
-        setError({ message: err.message, endpoint });
-      } finally {
-        setLoading(false);
-      }
+        fetchData();
+    }, [endpoint, apiKey, paramsString, enabled, refetchIndex]);
+
+    return { data, loading, error, refetch };
+};
+
+
+// --- App Context for Auth and Global State ---
+interface User {
+    id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    elastic_email_api_key?: string;
+    role: string;
+}
+
+interface AppContextType {
+    user: User | null;
+    token: string | null;
+    authLoading: boolean;
+    isAuthenticated: boolean;
+    apiKey: string | null;
+    accountData: any | null;
+    loadingAccount: boolean;
+    login: (credentials: any) => Promise<void>;
+    register: (details: any) => Promise<void>;
+    logout: () => void;
+    updateUserApiKey: (key: string) => Promise<void>;
+}
+
+const AppContext = createContext<AppContextType | undefined>(undefined);
+
+const AppProvider = ({ children }: { children: ReactNode }) => {
+    const [user, setUser] = useState<User | null>(null);
+    const [token, setToken] = useState<string | null>(() => localStorage.getItem('directus_token'));
+    const [authLoading, setAuthLoading] = useState(true);
+
+    const logout = useCallback(() => {
+        const refreshToken = localStorage.getItem('directus_refresh_token');
+        if (refreshToken) {
+            directusLogout(refreshToken).catch(console.error);
+        }
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem('directus_token');
+        localStorage.removeItem('directus_refresh_token');
+    }, []);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            if (token) {
+                try {
+                    const userData = await directusFetchMe();
+                    setUser(userData);
+                } catch (error) {
+                    console.error("Session check failed:", error);
+                    logout();
+                }
+            }
+            setAuthLoading(false);
+        };
+        checkAuth();
+    }, [token, logout]);
+
+    const handleAuthSuccess = (authData: { access_token: string, refresh_token: string }) => {
+        localStorage.setItem('directus_token', authData.access_token);
+        localStorage.setItem('directus_refresh_token', authData.refresh_token);
+        setToken(authData.access_token);
     };
 
-    fetchData();
-  }, [endpoint, apiKey, paramsString, refetchIndex]);
+    const login = async (credentials: any) => {
+        const authData = await directusLogin(credentials);
+        handleAuthSuccess(authData);
+    };
 
-  return { data, loading, error };
+    const register = async (details: any) => {
+        // NOTE: This assumes new users are created with a default role that allows login.
+        // You must configure this role in your Directus project settings.
+        // A common approach is to have a 'public' role with create permissions on the 'users' collection.
+        await directusRegister(details);
+        const authData = await directusLogin({ email: details.email, password: details.password });
+        handleAuthSuccess(authData);
+    };
+
+    const updateUserApiKey = async (key: string) => {
+        const updatedUser = await directusUpdateMe({ elastic_email_api_key: key });
+        setUser(prev => prev ? { ...prev, elastic_email_api_key: updatedUser.elastic_email_api_key } : null);
+    };
+
+    const apiKey = user?.elastic_email_api_key ?? null;
+    const { data: accountData, loading: loadingAccount } = useApi('/account/load', apiKey, {}, { enabled: !!apiKey });
+
+    const value = {
+        user,
+        token,
+        authLoading,
+        isAuthenticated: !!user,
+        apiKey,
+        accountData,
+        loadingAccount,
+        login,
+        register,
+        logout,
+        updateUserApiKey
+    };
+
+    return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+};
+
+
+const useAppContext = () => {
+    const context = useContext(AppContext);
+    if (context === undefined) {
+        throw new Error('useAppContext must be used within an AppProvider');
+    }
+    return context;
 };
 
 // --- Reusable Components ---
@@ -419,7 +446,8 @@ const formatDateForDisplay = (dateString: string | undefined) => {
 
 // --- View Components ---
 
-const StatisticsView = ({ apiKey }: { apiKey: string }) => {
+const StatisticsView = () => {
+    const { apiKey } = useAppContext();
     const [duration, setDuration] = useState('3months');
 
     const durationOptions: {[key: string]: {label: string, from: () => Date}} = {
@@ -434,7 +462,7 @@ const StatisticsView = ({ apiKey }: { apiKey: string }) => {
     const apiParams = {
         from: formatDateForApiV4(durationOptions[duration].from()),
     };
-    const { data: stats, loading, error } = useApiV4(`/statistics`, apiKey, apiParams);
+    const { data: stats, loading, error } = useApiV4(`/statistics`, apiKey, apiParams, { enabled: !!apiKey });
     
     const filterControl = (
         <div className="view-controls">
@@ -493,39 +521,33 @@ const StatisticsView = ({ apiKey }: { apiKey: string }) => {
     );
 };
 
-const AccountView = ({ apiKey, user }: { apiKey: string, user: any }) => {
-    const { updateUser } = useAuth();
-    const { data, loading, error } = useApi('/account/load', apiKey, {}, apiKey ? 1 : 0);
-    const [newApiKey, setNewApiKey] = useState(user.elastic_email_api_key || '');
+const AccountView = () => {
+    const { user, apiKey, accountData: data, loadingAccount: loading, updateUserApiKey } = useAppContext();
+    const [newApiKey, setNewApiKey] = useState(apiKey || '');
     const [isSaving, setIsSaving] = useState(false);
     const [status, setStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
 
+    useEffect(() => {
+        setNewApiKey(apiKey || '');
+    }, [apiKey]);
+    
     const handleSaveKey = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
         setStatus(null);
         try {
-            await apiFetch('/account/load', newApiKey);
-            await updateUser({ elastic_email_api_key: newApiKey });
+            await updateUserApiKey(newApiKey);
             setStatus({ type: 'success', message: 'API Key updated successfully!' });
         } catch (err: any) {
-            setStatus({ type: 'error', message: err.message || 'Invalid API Key or connection issue.' });
+            setStatus({ type: 'error', message: `Failed to update key: ${err.message}` });
         } finally {
             setIsSaving(false);
         }
     };
-    
-    if (!apiKey) return (
-        <CenteredMessage>
-            <div className="info-message">
-                <strong>No Elastic Email API Key found.</strong>
-                <p>Please add your key in the form above to view your account details.</p>
-            </div>
-        </CenteredMessage>
-    );
+
+
     if (loading) return <CenteredMessage><Loader /></CenteredMessage>;
-    if (error) return <ErrorMessage error={error} />;
-    if (!data) return <CenteredMessage>No account data found.</CenteredMessage>;
+    if (!data || !user) return <CenteredMessage>No account data found.</CenteredMessage>;
 
     const getStatusType = (status: string) => {
         const cleanStatus = String(status || '').toLowerCase().replace(/\s/g, '');
@@ -547,35 +569,10 @@ const AccountView = ({ apiKey, user }: { apiKey: string, user: any }) => {
     const accountStatus = data.status || 'Active';
     const statusType = getStatusType(accountStatus);
     const reputation = getReputationInfo(data.reputation);
-    const fullName = [data.firstname, data.lastname].filter(Boolean).join(' ') || user.first_name;
+    const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
 
     return (
         <div className="profile-view-container">
-            <div className="card">
-                <form onSubmit={handleSaveKey} className="modal-form" style={{padding: '1rem'}}>
-                    <div className="form-group">
-                        <label htmlFor="api-key-input">Your Elastic Email API Key</label>
-                        <input
-                            id="api-key-input"
-                            type="password"
-                            value={newApiKey}
-                            onChange={(e) => setNewApiKey(e.target.value)}
-                            placeholder="Enter your Elastic Email API Key"
-                            required
-                        />
-                        <small style={{ marginTop: '0.5rem', display: 'block' }}>
-                            Update your key here. It will be validated before saving.
-                        </small>
-                    </div>
-                    {status && <ActionStatus status={status} onDismiss={() => setStatus(null)}/>}
-                    <div className="form-actions" style={{justifyContent: 'flex-end', marginTop: 0}}>
-                        <button type="submit" className="btn btn-primary" disabled={isSaving}>
-                            {isSaving ? <Loader /> : 'Save & Verify Key'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-
             <div className="profile-hero">
                 <div className="profile-avatar">
                     <Icon path={ICONS.ACCOUNT} />
@@ -600,6 +597,8 @@ const AccountView = ({ apiKey, user }: { apiKey: string, user: any }) => {
                 </div>
             </div>
 
+            <ActionStatus status={status} onDismiss={() => setStatus(null)} />
+
             <div className="card-grid account-grid">
                 <AccountDataCard title="Account Status" iconPath={ICONS.VERIFY}>
                     <Badge text={accountStatus} type={statusType} />
@@ -612,6 +611,21 @@ const AccountView = ({ apiKey, user }: { apiKey: string, user: any }) => {
                     {(data.dailysendlimit ?? 0).toLocaleString()}
                 </AccountDataCard>
             </div>
+            
+            <form className="form-container" onSubmit={handleSaveKey} style={{maxWidth: 'none', marginTop: '1rem'}}>
+                 <div className="form-group full-width">
+                    <label htmlFor="api-key-input">Your Elastic Email API Key</label>
+                    <input id="api-key-input" type="password" value={newApiKey} onChange={e => setNewApiKey(e.target.value)} />
+                    <small style={{display: 'block', marginTop: '0.5rem'}}>
+                        Update your key here. It will be stored securely.
+                    </small>
+                </div>
+                <div className="form-actions">
+                    <button type="submit" className="btn btn-primary" disabled={isSaving}>
+                        {isSaving ? <Loader /> : 'Save API Key'}
+                    </button>
+                </div>
+            </form>
         </div>
     );
 };
@@ -627,10 +641,9 @@ const creditPackages = [
     { credits: 150000, price: 5000000 }, { credits: 200000, price: 6000000 },
 ];
 
-const CreditHistoryModal = ({ isOpen, onClose, apiKey }: { isOpen: boolean, onClose: () => void, apiKey: string }) => {
-    // Use the v2 hook as originally suggested for this specific endpoint
-    const refetchIndex = isOpen ? 1 : 0;
-    const { data: history, loading, error } = useApi('/account/loademailcreditshistory', apiKey, {}, refetchIndex);
+const CreditHistoryModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
+    const { apiKey } = useAppContext();
+    const { data: history, loading, error } = useApi('/account/loademailcreditshistory', apiKey, {}, { enabled: isOpen });
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Credit Purchase History">
@@ -673,7 +686,8 @@ const CreditHistoryModal = ({ isOpen, onClose, apiKey }: { isOpen: boolean, onCl
 };
 
 
-const BuyCreditsView = ({ apiKey, user }: { apiKey: string, user: any }) => {
+const BuyCreditsView = () => {
+    const { apiKey, user } = useAppContext();
     const [isSubmitting, setIsSubmitting] = useState<number | null>(null); // track which package is submitting
     const [modalState, setModalState] = useState({ isOpen: false, title: '', message: '' });
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -687,7 +701,7 @@ const BuyCreditsView = ({ apiKey, user }: { apiKey: string, user: any }) => {
         setIsSubmitting(pkg.credits);
 
         const params = new URLSearchParams({
-            userapikey: apiKey,
+            userapikey: apiKey!,
             useremail: user.email,
             amount: pkg.credits.toString(),
             totalprice: pkg.price.toString(),
@@ -734,7 +748,7 @@ const BuyCreditsView = ({ apiKey, user }: { apiKey: string, user: any }) => {
                     View History
                 </button>
             </div>
-            <CreditHistoryModal isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} apiKey={apiKey} />
+            <CreditHistoryModal isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} />
 
             <Modal isOpen={modalState.isOpen} onClose={closeModal} title={modalState.title}>
                 <p style={{whiteSpace: "pre-wrap"}}>{modalState.message}</p>
@@ -779,10 +793,10 @@ const BuyCreditsView = ({ apiKey, user }: { apiKey: string, user: any }) => {
     );
 };
 
-const DashboardView = ({ setView, apiKey, user }: { setView: (view: string) => void, apiKey: string, user: any }) => {
+const DashboardView = ({ setView }: { setView: (view: string) => void }) => {
+    const { apiKey, accountData: user } = useAppContext();
     const { data: statsData, loading: statsLoading, error: statsError } = useApiV4(`/statistics`, apiKey, { from: formatDateForApiV4(getPastDateByDays(30)) });
-    const { data: accountData } = useApi('/account/load', apiKey, {}, apiKey ? 1 : 0);
-    
+
     const navItems = [
         { name: 'Statistics', icon: ICONS.STATS, desc: 'View detailed sending statistics and analytics.', view: 'Statistics' },
         { name: 'Contacts', icon: ICONS.CONTACTS, desc: 'Manage your contacts, lists, and segments.', view: 'Contacts' },
@@ -799,7 +813,7 @@ const DashboardView = ({ setView, apiKey, user }: { setView: (view: string) => v
         <div className="dashboard-container">
             <div className="dashboard-header">
                 <div>
-                    <h2>Welcome, {user?.first_name || 'User'}!</h2>
+                    <h2>Welcome, {user?.firstname || 'User'}!</h2>
                     <p>Here's a quick overview of your MegaMail account. Ready to launch your next campaign?</p>
                 </div>
                 <div className="dashboard-actions">
@@ -810,13 +824,13 @@ const DashboardView = ({ setView, apiKey, user }: { setView: (view: string) => v
 
             <div className="dashboard-stats-grid">
                  <AccountDataCard title="Sending Reputation" iconPath={ICONS.TRENDING_UP}>
-                    {accountData?.reputation ? `${accountData.reputation}%` : 'N/A'}
+                    {user?.reputation ? `${user.reputation}%` : 'N/A'}
                 </AccountDataCard>
                 <AccountDataCard title="Emails Sent (30d)" iconPath={ICONS.MAIL}>
                     {statsLoading ? '...' : (statsData?.EmailTotal?.toLocaleString() ?? '0')}
                 </AccountDataCard>
                  <AccountDataCard title="Total Contacts" iconPath={ICONS.CONTACTS}>
-                    {accountData?.contactcount?.toLocaleString() ?? '0'}
+                    {user?.contactcount?.toLocaleString() ?? '0'}
                 </AccountDataCard>
             </div>
 
@@ -845,8 +859,8 @@ const DashboardView = ({ setView, apiKey, user }: { setView: (view: string) => v
 
 // --- START OF IMPLEMENTED VIEWS ---
 
-const ContactsView = ({ apiKey }: { apiKey: string }) => {
-    const [refetchIndex, setRefetchIndex] = useState(0);
+const ContactsView = () => {
+    const { apiKey } = useAppContext();
     const [searchQuery, setSearchQuery] = useState('');
     const [offset, setOffset] = useState(0);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -854,12 +868,11 @@ const ContactsView = ({ apiKey }: { apiKey: string }) => {
 
     const CONTACTS_PER_PAGE = 20;
 
-    const { data: contacts, loading, error } = useApiV4('/contacts', apiKey, { limit: CONTACTS_PER_PAGE, offset, search: searchQuery }, refetchIndex);
-    const refetch = () => setRefetchIndex(i => i + 1);
+    const { data: contacts, loading, error, refetch } = useApiV4('/contacts', apiKey, { limit: CONTACTS_PER_PAGE, offset, search: searchQuery }, { enabled: !!apiKey });
 
     const handleAddContact = async (contactData: {Email: string, FirstName: string, LastName: string}) => {
         try {
-            await apiFetchV4('/contacts', apiKey, { method: 'POST', body: [contactData] });
+            await apiFetchV4('/contacts', apiKey!, { method: 'POST', body: [contactData] });
             setActionStatus({ type: 'success', message: `Contact ${contactData.Email} added successfully!` });
             setIsModalOpen(false);
             refetch();
@@ -871,7 +884,7 @@ const ContactsView = ({ apiKey }: { apiKey: string }) => {
     const handleDeleteContact = async (email: string) => {
         if (!window.confirm(`Are you sure you want to delete ${email}?`)) return;
         try {
-            await apiFetchV4(`/contacts/${encodeURIComponent(email)}`, apiKey, { method: 'DELETE' });
+            await apiFetchV4(`/contacts/${encodeURIComponent(email)}`, apiKey!, { method: 'DELETE' });
             setActionStatus({ type: 'success', message: `Contact ${email} deleted successfully!` });
             refetch();
         } catch (err: any) {
@@ -999,21 +1012,20 @@ const AddContactForm = ({ onSubmit }: { onSubmit: (data: {Email: string, FirstNa
 };
 
 
-const EmailListView = ({ apiKey }: { apiKey: string }) => {
-    const [refetchIndex, setRefetchIndex] = useState(0);
+const EmailListView = () => {
+    const { apiKey } = useAppContext();
     const [actionStatus, setActionStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
     const [newListName, setNewListName] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const { data: lists, loading, error } = useApiV4('/lists', apiKey, {}, refetchIndex);
-    const refetch = () => setRefetchIndex(i => i + 1);
+    const { data: lists, loading, error, refetch } = useApiV4('/lists', apiKey, {}, { enabled: !!apiKey });
 
     const handleCreateList = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newListName) return;
         setIsSubmitting(true);
         try {
-            await apiFetchV4('/lists', apiKey, { method: 'POST', body: { ListName: newListName } });
+            await apiFetchV4('/lists', apiKey!, { method: 'POST', body: { ListName: newListName } });
             setActionStatus({ type: 'success', message: `List "${newListName}" created.` });
             setNewListName('');
             refetch();
@@ -1027,7 +1039,7 @@ const EmailListView = ({ apiKey }: { apiKey: string }) => {
     const handleDeleteList = async (listName: string) => {
         if (!window.confirm(`Are you sure you want to delete the list "${listName}"? This cannot be undone.`)) return;
         try {
-            await apiFetchV4(`/lists/${encodeURIComponent(listName)}`, apiKey, { method: 'DELETE' });
+            await apiFetchV4(`/lists/${encodeURIComponent(listName)}`, apiKey!, { method: 'DELETE' });
             setActionStatus({ type: 'success', message: `List "${listName}" deleted.` });
             refetch();
         } catch (err: any) {
@@ -1080,17 +1092,16 @@ const EmailListView = ({ apiKey }: { apiKey: string }) => {
     );
 };
 
-const SegmentsView = ({ apiKey }: { apiKey: string }) => {
-    const [refetchIndex, setRefetchIndex] = useState(0);
+const SegmentsView = () => {
+    const { apiKey } = useAppContext();
     const [actionStatus, setActionStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     
-    const { data: segments, loading, error } = useApiV4('/segments', apiKey, {}, refetchIndex);
-    const refetch = () => setRefetchIndex(i => i + 1);
+    const { data: segments, loading, error, refetch } = useApiV4('/segments', apiKey, {}, { enabled: !!apiKey });
 
     const handleCreateSegment = async (segmentData: {Name: string, Rule: string}) => {
         try {
-            await apiFetchV4('/segments', apiKey, { method: 'POST', body: segmentData });
+            await apiFetchV4('/segments', apiKey!, { method: 'POST', body: segmentData });
             setActionStatus({ type: 'success', message: `Segment "${segmentData.Name}" created.` });
             setIsModalOpen(false);
             refetch();
@@ -1102,7 +1113,7 @@ const SegmentsView = ({ apiKey }: { apiKey: string }) => {
     const handleDeleteSegment = async (segmentName: string) => {
         if (!window.confirm(`Are you sure you want to delete the segment "${segmentName}"?`)) return;
         try {
-            await apiFetchV4(`/segments/${encodeURIComponent(segmentName)}`, apiKey, { method: 'DELETE' });
+            await apiFetchV4(`/segments/${encodeURIComponent(segmentName)}`, apiKey!, { method: 'DELETE' });
             setActionStatus({ type: 'success', message: `Segment "${segmentName}" deleted.` });
             refetch();
         } catch (err: any) {
@@ -1178,7 +1189,8 @@ const CreateSegmentForm = ({ onSubmit }: { onSubmit: (data: {Name: string, Rule:
     );
 }
 
-const SendEmailView = ({ apiKey, user }: { apiKey: string, user: any }) => {
+const SendEmailView = () => {
+    const { apiKey, user } = useAppContext();
     const [isSending, setIsSending] = useState(false);
     const [sendStatus, setSendStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
     const [formData, setFormData] = useState({
@@ -1219,7 +1231,7 @@ const SendEmailView = ({ apiKey, user }: { apiKey: string, user: any }) => {
         }
 
         try {
-            await apiFetch('/email/send', apiKey, { method: 'POST', params });
+            await apiFetch('/email/send', apiKey!, { method: 'POST', params });
             setSendStatus({ type: 'success', message: 'Email sent successfully!' });
         } catch (err: any) {
             setSendStatus({ type: 'error', message: `Failed to send email: ${err.message}` });
@@ -1319,8 +1331,9 @@ const CampaignCardSkeleton = () => (
     </div>
 );
 
-const CampaignsView = ({ apiKey }: { apiKey: string }) => {
-    const { data: campaigns, loading, error } = useApiV4('/campaigns', apiKey);
+const CampaignsView = () => {
+    const { apiKey } = useAppContext();
+    const { data: campaigns, loading, error } = useApiV4('/campaigns', apiKey, {}, { enabled: !!apiKey });
     
     const getBadgeTypeForStatus = (statusName: string | undefined) => {
         const lowerStatus = (statusName || '').toLowerCase();
@@ -1487,27 +1500,24 @@ const DomainVerificationChecker = ({ domainName }: { domainName: string }) => {
     );
 };
 
-const DomainsView = ({ apiKey }: { apiKey: string }) => {
-    const [refetchIndex, setRefetchIndex] = useState(0);
+const DomainsView = () => {
+    const { apiKey } = useAppContext();
     const [actionStatus, setActionStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
     const [newDomain, setNewDomain] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [expandedDomain, setExpandedDomain] = useState<string | null>(null);
 
-    const { data, loading, error } = useApiV4('/domains', apiKey, {}, refetchIndex);
-    const refetch = () => {
-        setExpandedDomain(null);
-        setRefetchIndex(i => i + 1);
-    }
+    const { data, loading, error, refetch } = useApiV4('/domains', apiKey, {}, { enabled: !!apiKey });
 
     const handleAddDomain = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newDomain) return;
         setIsSubmitting(true);
         try {
-            await apiFetchV4('/domains', apiKey, { method: 'POST', body: { Domain: newDomain } });
+            await apiFetchV4('/domains', apiKey!, { method: 'POST', body: { Domain: newDomain } });
             setActionStatus({ type: 'success', message: `Domain "${newDomain}" added. Please add DNS records and verify.` });
             setNewDomain('');
+            setExpandedDomain(null);
             refetch();
         } catch (err: any) {
             setActionStatus({ type: 'error', message: `Failed to add domain: ${err.message}` });
@@ -1519,8 +1529,9 @@ const DomainsView = ({ apiKey }: { apiKey: string }) => {
     const handleDeleteDomain = async (domainName: string) => {
         if (!window.confirm(`Are you sure you want to delete "${domainName}"?`)) return;
         try {
-            await apiFetchV4(`/domains/${encodeURIComponent(domainName)}`, apiKey, { method: 'DELETE' });
+            await apiFetchV4(`/domains/${encodeURIComponent(domainName)}`, apiKey!, { method: 'DELETE' });
             setActionStatus({ type: 'success', message: `Domain "${domainName}" deleted.` });
+            setExpandedDomain(null);
             refetch();
         } catch (err: any) {
             setActionStatus({ type: 'error', message: `Failed to delete domain: ${err.message}` });
@@ -1596,7 +1607,8 @@ const DomainsView = ({ apiKey }: { apiKey: string }) => {
 };
 
 
-const SmtpView = ({ apiKey, user }: { apiKey: string, user: any }) => {
+const SmtpView = () => {
+    const { apiKey, user } = useAppContext();
     if (!user) return <CenteredMessage><Loader /></CenteredMessage>;
 
     const smtpDetails = {
@@ -1617,8 +1629,8 @@ const SmtpView = ({ apiKey, user }: { apiKey: string, user: any }) => {
                     <div className="smtp-detail-item full-span">
                         <label>Password</label>
                         <div className="secret-value-wrapper">
-                            <input type="password" value={apiKey} readOnly />
-                            <button className="btn" onClick={() => navigator.clipboard.writeText(apiKey)}>Copy</button>
+                            <input type="password" value={apiKey!} readOnly />
+                            <button className="btn" onClick={() => navigator.clipboard.writeText(apiKey!)}>Copy</button>
                         </div>
                         <small style={{display: 'block', marginTop: '0.5rem'}}>Your password is your API Key.</small>
                     </div>
@@ -1633,168 +1645,134 @@ const SmtpView = ({ apiKey, user }: { apiKey: string, user: any }) => {
 
 
 // --- Main App & Auth Flow ---
-
-const LoginPage = ({ setView }: { setView: (view: 'login' | 'register') => void }) => {
-    const { login } = useAuth();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
+const AuthView = () => {
+    const { login, register } = useAppContext();
+    const [mode, setMode] = useState<'login' | 'register'>('login');
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [form, setForm] = useState({
+        email: '',
+        password: '',
+        first_name: '',
+        last_name: ''
+    });
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
         setError('');
-        setLoading(true);
         try {
-            await login({ email, password });
+            if (mode === 'login') {
+                await login({ email: form.email, password: form.password });
+            } else {
+                await register({
+                    email: form.email,
+                    password: form.password,
+                    first_name: form.first_name,
+                    last_name: form.last_name,
+                });
+            }
         } catch (err: any) {
-            setError(err.message || 'Invalid credentials or connection issue.');
+            setError(err.message || 'An unknown error occurred.');
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
+    };
+    
+    const toggleMode = () => {
+        setMode(prev => prev === 'login' ? 'register' : 'login');
+        setError('');
     };
 
     return (
         <div className="auth-container">
             <div className="auth-box">
                 <h1 className="logo-font">MegaMail</h1>
-                <p>Welcome back! Please sign in to your account.</p>
+                <p>{mode === 'login' ? 'Sign in to your account' : 'Create a new account'}</p>
                 <form className="auth-form" onSubmit={handleSubmit}>
-                    <div className="input-group" style={{marginBottom: '1rem'}}>
-                        <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" required disabled={loading} />
+                    {mode === 'register' && (
+                        <>
+                             <div className="form-group">
+                                <input name="first_name" type="text" value={form.first_name} onChange={handleInputChange} placeholder="First Name" required disabled={isLoading} />
+                            </div>
+                             <div className="form-group">
+                                <input name="last_name" type="text" value={form.last_name} onChange={handleInputChange} placeholder="Last Name" required disabled={isLoading} />
+                            </div>
+                        </>
+                    )}
+                    <div className="form-group">
+                        <input name="email" type="email" value={form.email} onChange={handleInputChange} placeholder="Email Address" required disabled={isLoading} />
                     </div>
-                    <div className="input-group">
-                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required disabled={loading} />
+                    <div className="form-group">
+                        <input name="password" type="password" value={form.password} onChange={handleInputChange} placeholder="Password" required disabled={isLoading} />
                     </div>
-                    {error && <div className="action-status error" style={{textAlign:'center', marginTop: '1rem'}}>{error}</div>}
-                    <button type="submit" className="btn btn-primary" disabled={loading}>
-                        {loading && <Loader />}
-                        <span>{loading ? 'Signing In...' : 'Sign In'}</span>
+                    
+                    {error && <div className="action-status error">{error}</div>}
+                    
+                    <button type="submit" className="btn btn-primary" disabled={isLoading}>
+                        {isLoading && <Loader />}
+                        <span>{isLoading ? 'Processing...' : (mode === 'login' ? 'Login' : 'Create Account')}</span>
                     </button>
                 </form>
-                 <p className="auth-switch">
-                    Don't have an account? <button onClick={() => setView('register')}>Register</button>
-                </p>
+                <button onClick={toggleMode} className="toggle-auth-btn">
+                    {mode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+                </button>
             </div>
         </div>
     );
 };
 
-const RegisterPage = ({ setView }: { setView: (view: 'login' | 'register') => void }) => {
-    const { register } = useAuth();
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-        try {
-            await register({ first_name: firstName, last_name: lastName, email, password });
-        } catch (err: any) {
-            setError(err.message || 'Registration failed. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="auth-container">
-            <div className="auth-box">
-                <h1 className="logo-font">Create Your Account</h1>
-                <p>Join MegaMail to supercharge your email marketing.</p>
-                <form className="auth-form" onSubmit={handleSubmit}>
-                    <div className="form-grid" style={{gap: '1rem'}}>
-                         <div className="input-group">
-                            <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First Name" required disabled={loading} />
-                        </div>
-                        <div className="input-group">
-                            <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last Name" required disabled={loading} />
-                        </div>
-                    </div>
-                    <div className="input-group" style={{margin: '1rem 0'}}>
-                        <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" required disabled={loading} />
-                    </div>
-                    <div className="input-group">
-                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required disabled={loading} />
-                    </div>
-                    {error && <div className="action-status error" style={{textAlign:'center', marginTop: '1rem'}}>{error}</div>}
-                    <button type="submit" className="btn btn-primary" disabled={loading}>
-                        {loading && <Loader />}
-                        <span>{loading ? 'Creating Account...' : 'Register'}</span>
-                    </button>
-                </form>
-                <p className="auth-switch">
-                    Already have an account? <button onClick={() => setView('login')}>Sign In</button>
-                </p>
-            </div>
-        </div>
-    );
-};
-
-const OnboardingView = () => {
-    const { user, updateUser } = useAuth();
+const ApiKeySetupView = () => {
+    const { updateUserApiKey } = useAppContext();
     const [apiKey, setApiKey] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
-    const [showKey, setShowKey] = useState(false);
-    
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
         setError('');
-        if (!apiKey) {
-            setError('API Key cannot be empty.');
-            return;
-        }
-        setLoading(true);
         try {
-            // 1. Validate the key against Elastic Email
-            await apiFetch('/account/load', apiKey);
-            // 2. If valid, save it to the user's profile in Directus
-            await updateUser({ elastic_email_api_key: apiKey });
+            await apiFetch('/account/load', apiKey); // Verify key first
+            await updateUserApiKey(apiKey);
         } catch (err: any) {
-            setError(err.message || 'Invalid API Key or connection issue.');
+            setError(err.message || "Invalid API key or failed to save.");
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
     return (
         <div className="auth-container">
             <div className="auth-box">
-                <h1 className="logo-font">One Last Step, {user?.first_name}!</h1>
-                <p>To power up your account, please enter your Elastic Email API Key.</p>
+                <h1 className="logo-font">One More Step</h1>
+                <p>Please provide your Elastic Email API key to continue.</p>
                 <form className="auth-form" onSubmit={handleSubmit}>
-                    <div className="input-group">
-                         <input
-                            type={showKey ? 'text' : 'password'}
+                    <div className="form-group">
+                        <input
+                            type="password"
                             value={apiKey}
                             onChange={(e) => setApiKey(e.target.value)}
                             placeholder="Your Elastic Email API Key"
-                            aria-label="API Key"
-                            disabled={loading}
+                            required
+                            disabled={isLoading}
                         />
-                        <button type="button" className="input-icon-btn" onClick={() => setShowKey(!showKey)} aria-label={showKey ? 'Hide key' : 'Show key'}>
-                            <Icon path={showKey ? ICONS.EYE_OFF : ICONS.EYE} />
-                        </button>
                     </div>
-                    <small style={{textAlign: 'center', margin: '1rem 0', display: 'block', color: 'var(--subtle-text-color)'}}>
-                        You can find this in your Elastic Email dashboard under Settings. You can update this later in your profile.
-                    </small>
-                    {error && <div className="action-status error" style={{textAlign:'center'}}>{error}</div>}
-                    <button type="submit" className="btn btn-primary" disabled={loading}>
-                        {loading && <Loader />}
-                        <span>{loading ? 'Verifying...' : 'Save & Continue'}</span>
+                     {error && <div className="action-status error">{error}</div>}
+                    <button type="submit" className="btn btn-primary" disabled={isLoading}>
+                        {isLoading && <Loader />}
+                        <span>{isLoading ? 'Verifying & Saving...' : 'Save and Continue'}</span>
                     </button>
                 </form>
             </div>
         </div>
     );
-}
+};
+
 
 const views: { [key: string]: React.ComponentType<any> } = {
     Dashboard: DashboardView,
@@ -1815,31 +1793,47 @@ const getIconForView = (viewName: string) => {
     return (ICONS as Record<string, string>)[normalizedName] || ICONS.DEFAULT;
 };
 
-const MainApp = () => {
-    const { user, logout } = useAuth();
+const AppContent = () => {
+    const { authLoading, isAuthenticated, apiKey, loadingAccount } = useAppContext();
     const [view, setView] = useState('Dashboard');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     
-    // The apiKey for the entire app now comes from the authenticated user's profile
-    const apiKey = user?.elastic_email_api_key;
-    
-    // Close mobile menu on view change
     useEffect(() => {
         setMobileMenuOpen(false);
     }, [view]);
 
+    if (authLoading) {
+      return (
+        <div className="auth-container">
+          <Loader />
+        </div>
+      );
+    }
+    
+    if (!isAuthenticated) {
+        return <AuthView />;
+    }
+    
     if (!apiKey) {
-       return <OnboardingView />;
+        return <ApiKeySetupView />;
+    }
+
+    if (loadingAccount) {
+         return (
+            <div className="auth-container">
+                <Loader />
+            </div>
+        );
     }
 
     const renderView = () => {
         const Component = views[view] || DashboardView;
-        return <Component apiKey={apiKey} setView={setView} user={user} />;
+        return <Component setView={setView} />;
     };
 
     return (
         <div className={`app-container ${mobileMenuOpen ? 'mobile-menu-open' : ''}`}>
-            <Sidebar view={view} setView={setView} logout={logout} />
+            <Sidebar view={view} setView={setView} />
             <div className="mobile-menu-overlay" onClick={() => setMobileMenuOpen(false)}></div>
             <main className="main-wrapper">
                 <MobileHeader
@@ -1855,30 +1849,10 @@ const MainApp = () => {
             </main>
         </div>
     );
-}
-
-const App = () => {
-    const { loading, isAuthenticated } = useAuth();
-    const [authView, setAuthView] = useState<'login' | 'register'>('login');
-
-    if (loading) {
-        return (
-            <div className="auth-container">
-                <Loader />
-            </div>
-        );
-    }
-    
-    if (!isAuthenticated) {
-        return authView === 'login' 
-            ? <LoginPage setView={setAuthView} /> 
-            : <RegisterPage setView={setAuthView} />;
-    }
-
-    return <MainApp />;
 };
 
-const Sidebar = ({ view, setView, logout }: { view: string, setView: (view: string) => void, logout: () => void }) => {
+const Sidebar = ({ view, setView }: { view: string, setView: (view: string) => void }) => {
+    const { logout } = useAppContext();
     const mainNavItems = ['Dashboard', 'Statistics', 'Contacts', 'Email Lists', 'Segments', 'Send Email', 'Campaigns', 'Domains', 'SMTP'];
 
     return (
@@ -1924,13 +1898,14 @@ const MobileHeader = ({ viewTitle, onMenuClick }: { viewTitle: string, onMenuCli
     );
 }
 
+const App = () => (
+    <AppProvider>
+        <AppContent />
+    </AppProvider>
+);
 
 const container = document.getElementById('root');
 if (container) {
     const root = createRoot(container);
-    root.render(
-        <AuthProvider>
-            <App />
-        </AuthProvider>
-    );
+    root.render(<App />);
 }

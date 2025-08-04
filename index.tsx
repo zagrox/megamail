@@ -1858,24 +1858,9 @@ const MainApp = () => {
 }
 
 const App = () => {
-    const { loading, isAuthenticated } = useAuth();
-    const [authView, setAuthView] = useState<'login' | 'register'>('login');
-
-    if (loading) {
-        return (
-            <div className="auth-container">
-                <Loader />
-            </div>
-        );
-    }
-    
-    if (!isAuthenticated) {
-        return authView === 'login' 
-            ? <LoginPage setView={setAuthView} /> 
-            : <RegisterPage setView={setAuthView} />;
-    }
-
-    return <MainApp />;
+    // ...existing code...
+    // Use React Router for navigation between Login and Register pages
+    // ...existing code...
 };
 
 const Sidebar = ({ view, setView, logout }: { view: string, setView: (view: string) => void, logout: () => void }) => {

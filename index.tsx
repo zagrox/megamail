@@ -205,7 +205,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const register = async (details: any) => {
-        await directusFetch('/users', {
+        await directusFetch('/users/register', {
             method: 'POST',
             body: JSON.stringify(details),
         });
